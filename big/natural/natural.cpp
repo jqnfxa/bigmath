@@ -5,6 +5,8 @@
 #include <ranges>
 #include <stdexcept>
 #include <limits>
+#include <sstream>
+#include <compare>
 #include "natural.hpp"
 
 namespace big
@@ -13,20 +15,34 @@ namespace big
 	{
 	}
 
-	natural::natural(std::size_t num)
+	natural::natural(const std::string &num)
 	{
 		num_representation new_num;
+		new_num.reserve(num.size());
 
-		do
+		for (const auto &item: std::ranges::reverse_view(num))
 		{
-			new_num.push_back(num % base);
-			num /= base;
-		} while (num != 0);
+			if (isdigit(item))
+			{
+				new_num.push_back(item - '0');
+			}
+		}
 
 		num_ = std::move(new_num);
+		erase_leading_zeroes();
 	}
 
-	std::strong_ordering natural::operator<=>(const natural &other) const
+	natural::natural(std::size_t num) : natural(std::to_string(num))
+	{
+	}
+
+	// TODO how to handle == and != in <=> operator?
+	bool natural::operator==(const natural &other) const & noexcept
+	{
+		return *this <=> other == 0;
+	}
+
+	std::strong_ordering natural::operator<=>(const natural &other) const & noexcept
 	{
 		if (num_.size() != other.num_.size())
 		{
@@ -35,41 +51,45 @@ namespace big
 
 		size_t order = num_.size() - 1;
 
-		while (order != 0 && num_[order] == other.num_[order])
+		for (size_t i = 0; i <= order; ++i)
 		{
-			--order;
+			if (num_[order - i] != other.num_[order - i])
+			{
+				return num_[order - i] <=> other.num_[order - i];
+			}
 		}
 
-		return num_[order] <=> other.num_[order];
+		// If all digits are equal, the numbers are equal
+		return std::strong_ordering::equal;
 	}
 
-	natural &natural::operator++()
+	natural &natural::operator++() & noexcept
 	{
-		*this += natural(1);
+		*this += natural("1");
 		return *this;
 	}
 
-	natural natural::operator++(int)
+	natural natural::operator++(int) const & noexcept
 	{
 		natural temp(*this);
 		++(temp);
 		return temp;
 	}
 
-	natural &natural::operator--()
+	natural &natural::operator--() & noexcept
 	{
-		*this -= natural(1);
+		*this -= natural("1");
 		return *this;
 	}
 
-	natural natural::operator--(int)
+	natural natural::operator--(int) const & noexcept
 	{
 		natural temp(*this);
 		--(temp);
 		return temp;
 	}
 
-	natural &natural::operator+=(const natural &other)
+	natural &natural::operator+=(const natural &other) & noexcept
 	{
 		auto max_order = std::max(num_.size(), other.num_.size());
 		num_.resize(max_order + 1);
@@ -91,7 +111,7 @@ namespace big
 		return *this;
 	}
 
-	natural &natural::operator-=(const natural &other)
+	natural &natural::operator-=(const natural &other) &
 	{
 		if (other > *this)
 		{
@@ -127,12 +147,12 @@ namespace big
 		return *this;
 	}
 
-	natural &natural::operator*=(const natural &other)
+	natural &natural::operator*=(const natural &other) & noexcept
 	{
 		if (is_zero() || other.is_zero())
 		{
 			// TODO how to assign zero value normally?
-			*this = natural(0);
+			nullify();
 			return *this;
 		}
 
@@ -157,25 +177,24 @@ namespace big
 		}
 
 		num_ = std::move(result);
-
 		erase_leading_zeroes();
 
 		return *this;
 	}
 
-	natural &natural::operator/=(const natural &other)
+	natural &natural::operator/=(const natural &other) &
 	{
 		num_ = divide_by(other).first.num_;
 		return *this;
 	}
 
-	natural &natural::operator%=(const natural &other)
+	natural &natural::operator%=(const natural &other) &
 	{
 		num_ = divide_by(other).second.num_;
 		return *this;
 	}
 
-	natural &natural::operator<<=(std::size_t shift)
+	natural &natural::operator<<=(std::size_t shift) &
 	{
 		if (num_.size() > std::numeric_limits<std::size_t>::max() - shift)
 		{
@@ -187,18 +206,17 @@ namespace big
 			return *this;
 		}
 
-		auto new_size = num_.size() + shift;
-		num_.resize(new_size);
+		num_.resize(num_.size() + shift);
 
 		// TODO iterator::difference_type (long) vs shift (std::size_t)
-		auto old = std::prev(num_.end(), shift);
-		auto destination = std::prev(num_.end());
+		auto old = std::next(num_.rbegin(), shift);
+		auto destination = num_.rbegin();
 
-		for (; old != num_.begin(); --destination, --old)
+		for (; old != num_.rend(); ++destination, ++old)
 		{
 			*destination = *old;
 		}
-		for (; destination != num_.begin(); --destination)
+		for (; destination != num_.rend(); ++destination)
 		{
 			*destination = 0;
 		}
@@ -206,10 +224,15 @@ namespace big
 		return *this;
 	}
 
-	natural &natural::operator>>=(std::size_t shift)
+	natural &natural::operator>>=(std::size_t shift) & noexcept
 	{
-		if (is_zero() || shift == 0 || shift >= num_.size())
+		if (is_zero() || shift == 0)
 		{
+			return *this;
+		}
+		if (shift >= num_.size())
+		{
+			nullify();
 			return *this;
 		}
 
@@ -221,62 +244,61 @@ namespace big
 			*destination = *old;
 		}
 
-		auto new_size = num_.size() - shift;
-		num_.resize(new_size);
+		num_.resize(num_.size() - shift);
 
 		return *this;
 	}
 
-	natural natural::operator+(const natural &other) const
+	natural natural::operator+(const natural &other) const & noexcept
 	{
 		natural temp(*this);
 		temp += other;
 		return temp;
 	}
 
-	natural natural::operator-(const natural &other) const
+	natural natural::operator-(const natural &other) const &
 	{
 		natural temp(*this);
 		temp -= other;
 		return temp;
 	}
 
-	natural natural::operator*(const natural &other) const
+	natural natural::operator*(const natural &other) const & noexcept
 	{
 		natural temp(*this);
 		temp *= other;
 		return temp;
 	}
 
-	natural natural::operator/(const natural &other) const
+	natural natural::operator/(const natural &other) const &
 	{
 		natural temp(*this);
 		temp /= other;
 		return temp;
 	}
 
-	natural natural::operator%(const natural &other) const
+	natural natural::operator%(const natural &other) const &
 	{
 		natural temp(*this);
 		temp %= other;
 		return temp;
 	}
 
-	natural natural::operator<<(std::size_t shift) const
+	natural natural::operator<<(std::size_t shift) const &
 	{
 		natural temp(*this);
 		temp <<= shift;
 		return temp;
 	}
 
-	natural natural::operator>>(std::size_t shift) const
+	natural natural::operator>>(std::size_t shift) const & noexcept
 	{
 		natural temp(*this);
 		temp >>= shift;
 		return temp;
 	}
 
-	void natural::erase_leading_zeroes()
+	void natural::erase_leading_zeroes() & noexcept
 	{
 		if (is_zero())
 		{
@@ -288,42 +310,75 @@ namespace big
 			return digit != 0;
 		});
 
-		auto real_size = num_.size() - std::distance(num_.rbegin(), first_non_zero);
-		num_.resize(real_size);
+		num_.resize(num_.size() - std::distance(num_.rbegin(), first_non_zero));
 	}
 
-	bool natural::is_zero() const
+	void natural::nullify() & noexcept
+	{
+		if (num_.size() != 1)
+		{
+			num_.resize(1);
+		}
+
+		num_[0] = 0;
+	}
+
+	bool natural::is_zero() const & noexcept
 	{
 		return num_.size() == 1 && num_.front() == 0;
 	}
 
-	// TODO function is terribly slow, improve required
-	std::pair<natural, natural> natural::divide_by(const natural &divisor) const
+	// TODO function is fast but not efficient (many copies)
+	std::pair<natural, natural> natural::divide_by(const natural &divisor) const &
 	{
 		if (divisor.is_zero())
 		{
 			throw std::domain_error("Cannot divide by zero");
 		}
-
-		natural quotient;
-		natural remainder = *this;
-
-		while (remainder >= divisor)
+		if (*this < divisor)
 		{
-			remainder -= divisor;
-			++quotient;
+			return {natural(0), *this};
 		}
+
+		natural quotient(0);
+		natural remainder(0);
+		natural count(0);
+
+		for (auto it: std::ranges::reverse_view(num_))
+		{
+			remainder <<= 1;
+			remainder += natural(it);
+
+			while (remainder >= divisor)
+			{
+				remainder -= divisor;
+				++count;
+			}
+
+			quotient <<= 1;
+			quotient += count;
+			count = natural();
+		}
+
+		quotient.erase_leading_zeroes();
 
 		return {quotient, remainder};
 	}
 
-	std::ostream &operator<<(std::ostream &out, const natural &num)
+	std::string natural::to_str() const & noexcept
 	{
-		for (const auto &it: std::ranges::reverse_view(num.num_))
+		std::ostringstream ss;
+
+		for (const auto &it: std::ranges::reverse_view(num_))
 		{
-			out << static_cast<int16_t>(it);
+			ss << static_cast<int16_t>(it);
 		}
 
-		return out;
+		return ss.str();
+	}
+
+	std::ostream &operator<<(std::ostream &out, const natural &num)
+	{
+		return out << num.to_str();
 	}
 }

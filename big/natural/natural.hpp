@@ -2,12 +2,13 @@
 
 #include <cstdint>
 #include <vector>
+#include <compare>
 #include <ostream>
 
 namespace big
 {
 	class natural {
-		// TODO where it should be?
+		// TODO where should we store base?
 		static constexpr std::int32_t base = 10;
 
 		using cell_type = std::uint8_t;
@@ -15,57 +16,62 @@ namespace big
 
 		num_representation num_;
 
-		void erase_leading_zeroes();
+		void erase_leading_zeroes() & noexcept;
 
+		void nullify() & noexcept;
 	public:
 		natural();
 
+		explicit natural(const std::string &num);
+
 		explicit natural(std::size_t num);
 
-		std::strong_ordering operator<=>(const natural &other) const;
+		bool operator==(const natural &other) const & noexcept;
 
-		natural &operator++();
+		std::strong_ordering operator<=>(const natural &other) const & noexcept;
 
-		// TODO use different dummy?
-		natural operator++(int);
+		natural &operator++() & noexcept;
 
-		natural &operator--();
+		natural operator++(int) const & noexcept;
 
-		// TODO use different dummy?
-		natural operator--(int);
+		natural &operator--() & noexcept;
 
-		natural &operator+=(const natural &other);
+		natural operator--(int) const & noexcept;
 
-		natural &operator-=(const natural &other);
+		natural &operator+=(const natural &other) & noexcept;
 
-		natural &operator*=(const natural &other);
+		natural &operator-=(const natural &other) &;
 
-		natural &operator/=(const natural &other);
+		natural &operator*=(const natural &other) & noexcept;
 
-		natural &operator%=(const natural &other);
+		natural &operator/=(const natural &other) &;
 
-		natural &operator<<=(std::size_t shift);
+		natural &operator%=(const natural &other) &;
 
-		natural &operator>>=(std::size_t shift);
+		natural &operator<<=(std::size_t shift) &;
 
-		natural operator+(const natural &other) const;
+		natural &operator>>=(std::size_t shift) & noexcept;
 
-		natural operator-(const natural &other) const;
+		natural operator+(const natural &other) const & noexcept;
 
-		natural operator*(const natural &other) const;
+		natural operator-(const natural &other) const &;
 
-		natural operator/(const natural &other) const;
+		natural operator*(const natural &other) const & noexcept;
 
-		natural operator%(const natural &other) const;
+		natural operator/(const natural &other) const &;
 
-		natural operator<<(std::size_t shift) const;
+		natural operator%(const natural &other) const &;
 
-		natural operator>>(std::size_t shift) const;
+		natural operator<<(std::size_t shift) const &;
 
-		[[nodiscard]] bool is_zero() const;
+		natural operator>>(std::size_t shift) const & noexcept;
 
-		[[nodiscard]] std::pair<natural, natural> divide_by(const natural &divisor) const;
+		[[nodiscard]] bool is_zero() const & noexcept;
+
+		[[nodiscard]] std::pair<natural, natural> divide_by(const natural &divisor) const &;
+
+		std::string to_str() const & noexcept;
 
 		friend std::ostream &operator<<(std::ostream &out, const natural &num);
 	};
-};
+}
