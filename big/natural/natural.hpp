@@ -8,9 +8,6 @@
 namespace big
 {
 	class natural {
-		// TODO where should we store base?
-		static constexpr std::int32_t base = 10;
-
 		using cell_type = std::uint8_t;
 		using num_representation = std::vector<cell_type>;
 
@@ -20,6 +17,8 @@ namespace big
 
 		void nullify() & noexcept;
 	public:
+		static constexpr std::int32_t base = 10;
+
 		natural();
 
 		explicit natural(const std::string &num);
