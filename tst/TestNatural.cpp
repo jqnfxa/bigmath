@@ -1,4 +1,5 @@
 #include "../big/natural/natural.hpp"
+#include "../big/algorithm/algorithm.hpp"
 #include "gtest/gtest.h"
 
 TEST(NaturalTestSuite, TestComparison)
@@ -228,4 +229,22 @@ TEST(NaturalTestSuite, TestModule)
 	{
 		EXPECT_EQ(e.what(), std::string("Cannot divide by zero"));
 	}
+
+	EXPECT_EQ(natural("42") % natural("6"), natural("0"));
+}
+
+TEST(NaturalTestSuite, TestGcd)
+{
+	using namespace big;
+
+	EXPECT_EQ(gcd(natural("48123749817263487162398476123987461293846391"), natural("714263874612")), natural("3"));
+
+	EXPECT_EQ(gcd(natural("34542396282240"), natural("154")), natural("154"));
+}
+
+TEST(NaturalTestSuite, TestLcm)
+{
+	using namespace big;
+
+	EXPECT_EQ(lcm(natural("12265103118755758026325601433600"), natural("565646")), natural("3468853259355859752279485574255052800"));
 }
