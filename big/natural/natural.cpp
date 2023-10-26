@@ -39,7 +39,7 @@ namespace big
 	// TODO how to handle == and != in <=> operator?
 	bool natural::operator==(const natural &other) const & noexcept
 	{
-		return *this <=> other == 0;
+		return *this <=> other == std::strong_ordering::equal;
 	}
 
 	std::strong_ordering natural::operator<=>(const natural &other) const & noexcept
