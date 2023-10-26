@@ -300,17 +300,10 @@ namespace big
 
 	void natural::erase_leading_zeroes() & noexcept
 	{
-		if (is_zero())
+		while (num_.size() > 1 && num_.back() == 0)
 		{
-			return;
+			num_.pop_back();
 		}
-
-		auto first_non_zero = std::find_if(num_.rbegin(), num_.rend(), [](const auto &digit)
-		{
-			return digit != 0;
-		});
-
-		num_.resize(num_.size() - std::distance(num_.rbegin(), first_non_zero));
 	}
 
 	void natural::nullify() & noexcept
@@ -357,7 +350,7 @@ namespace big
 
 			quotient <<= 1;
 			quotient += count;
-			count = natural();
+			count.nullify();
 		}
 
 		quotient.erase_leading_zeroes();
