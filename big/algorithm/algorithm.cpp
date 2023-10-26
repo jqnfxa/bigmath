@@ -1,7 +1,3 @@
-//
-// Created by shard on 10/26/23.
-//
-
 #include "algorithm.hpp"
 
 namespace big

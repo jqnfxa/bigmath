@@ -1,7 +1,3 @@
-//
-// Created by shard on 10/25/23.
-//
-
 #include <ranges>
 #include <stdexcept>
 #include <limits>
