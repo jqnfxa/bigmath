@@ -184,13 +184,13 @@ namespace big
 
 	natural &natural::operator/=(const natural &other) &
 	{
-		num_ = divide_by(other).first.num_;
+		num_ = std::move(divide_by(other).first.num_);
 		return *this;
 	}
 
 	natural &natural::operator%=(const natural &other) &
 	{
-		num_ = divide_by(other).second.num_;
+		num_ = std::move(divide_by(other).second.num_);
 		return *this;
 	}
 

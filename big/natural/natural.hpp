@@ -16,6 +16,7 @@ namespace big
 		void erase_leading_zeroes() & noexcept;
 
 		void nullify() & noexcept;
+
 	public:
 		static constexpr std::int32_t base = 10;
 
