@@ -4,16 +4,15 @@
 
 namespace big
 {
-	integer::integer(std::int64_t num) : integer(num < 0, natural(std::to_string(num)))
+	integer::integer(std::int64_t num) : is_negative_(num < 0), absolute_value_(std::to_string(num))
 	{
 	}
 
-	integer::integer(bool is_negative, const natural &natural) : is_negative_(is_negative), absolute_value_(natural)
+	integer::integer(const natural &natural) : is_negative_(false), absolute_value_(natural)
 	{
 	}
 
-	integer::integer(bool is_negative, natural &&natural) : is_negative_(is_negative),
-															absolute_value_(std::move(natural))
+	integer::integer(natural &&natural) : is_negative_(false), absolute_value_(std::move(natural))
 	{
 	}
 
@@ -43,9 +42,36 @@ namespace big
 		return absolute_value_ <=> other.absolute_value_;
 	}
 
+	void integer::flip_sing() & noexcept
+	{
+		is_negative_ = !is_negative_;
+	}
+
+	bool integer::is_positive() const & noexcept
+	{
+		return !is_negative_;
+	}
+
+	natural integer::abs() const & noexcept
+	{
+		return absolute_value_;
+	}
+
+	integer integer::operator-() const & noexcept
+	{
+		integer temp(*this);
+		temp.flip_sing();
+		return temp;
+	}
+
+	integer integer::operator+() const & noexcept
+	{
+		return integer(*this);
+	}
+
 	integer &integer::operator++() & noexcept
 	{
-		*this += integer(false, natural("1"));
+		*this += integer(1);
 		return *this;
 	}
 
@@ -58,7 +84,7 @@ namespace big
 
 	integer &integer::operator--() & noexcept
 	{
-		*this -= integer(false, natural("1"));
+		*this -= integer(1);
 		return *this;
 	}
 
@@ -72,79 +98,40 @@ namespace big
 	integer &integer::operator+=(const integer &other) & noexcept
 	{
 		// If integers have same sign then just sum absolute values
-		if (!(is_negative_ ^ other.is_negative_))
+		if (is_negative_ == other.is_negative_)
 		{
 			absolute_value_ += other.absolute_value_;
 		}
 		else
 		{
-			// TODO optimize this idea
-			if (is_negative_)
-			{
-				if (absolute_value_ > other.absolute_value_)
-				{
-					is_negative_ = true;
-					absolute_value_ -= other.absolute_value_;
-				}
-				else
-				{
-					is_negative_ = false;
-					absolute_value_ = std::move(other.absolute_value_ - absolute_value_);
-				}
-			}
-			else
-			{
-				if (absolute_value_ > other.absolute_value_)
-				{
-					is_negative_ = false;
-					absolute_value_ -= other.absolute_value_;
-				}
-				else
-				{
-					is_negative_ = true;
-					absolute_value_ = std::move(other.absolute_value_ - absolute_value_);
-				}
-			}
+			flip_sing();
+			*this = std::move(other - *this);
 		}
+		normalize();
 
 		return *this;
 	}
 
 	integer &integer::operator-=(const integer &other) &
 	{
-		// TODO optimize this idea
-		if (!is_negative_ && !other.is_negative_)
+		// If integers have different sing then we can just sum absolute values
+		if (is_negative_ ^ other.is_negative_)
 		{
-			if (*this < other)
+			absolute_value_ += other.absolute_value_;
+		}
+		else
+		{
+			if (absolute_value_ < other.absolute_value_)
 			{
-				is_negative_ = true;
+				flip_sing();
 				absolute_value_ = std::move(other.absolute_value_ - absolute_value_);
 			}
 			else
 			{
-				absolute_value_ -= other.absolute_value_;
+				absolute_value_ = std::move(absolute_value_ - other.absolute_value_);
 			}
 		}
-		else if (!is_negative_ && other.is_negative_)
-		{
-			absolute_value_ += other.absolute_value_;
-		}
-		else if (is_negative_ && !other.is_negative_)
-		{
-			absolute_value_ += other.absolute_value_;
-		}
-		else if (is_negative_ && is_negative_)
-		{
-			if (*this < other)
-			{
-				absolute_value_ -= other.absolute_value_;
-			}
-			else
-			{
-				is_negative_ = false;
-				absolute_value_ = std::move(other.absolute_value_ - absolute_value_);
-			}
-		}
+		normalize();
 
 		return *this;
 	}
@@ -153,6 +140,8 @@ namespace big
 	{
 		is_negative_ ^= other.is_negative_;
 		absolute_value_ *= other.absolute_value_;
+		normalize();
+
 		return *this;
 	}
 
@@ -160,23 +149,38 @@ namespace big
 	{
 		is_negative_ ^= other.is_negative_;
 		absolute_value_ /= other.absolute_value_;
+		normalize();
+
+		return *this;
+	}
+
+	integer &integer::operator%=(const integer &other) &
+	{
+		absolute_value_ %= other.absolute_value_;
+
+		if (!is_zero() && is_negative_ ^ other.is_negative_)
+		{
+			*this += other;
+		}
+
+		normalize();
+
 		return *this;
 	}
 
 	integer &integer::operator<<=(std::size_t shift) &
 	{
 		absolute_value_ <<= shift;
+		normalize();
+
 		return *this;
 	}
 
 	integer &integer::operator>>=(std::size_t shift) & noexcept
 	{
 		absolute_value_ >>= shift;
+		normalize();
 
-		if (is_negative_)
-		{
-			is_negative_ = !is_zero();
-		}
 		return *this;
 	}
 
@@ -210,7 +214,9 @@ namespace big
 
 	integer integer::operator%(const integer &other) const &
 	{
-		return integer(false, std::move(absolute_value_ % other.absolute_value_));
+		integer temp(*this);
+		temp %= other;
+		return temp;
 	}
 
 	integer integer::operator<<(std::size_t shift) const &
@@ -249,5 +255,14 @@ namespace big
 	std::ostream &operator<<(std::ostream &out, const integer &num)
 	{
 		return out << num.to_str();
+	}
+
+	void integer::normalize() & noexcept
+	{
+		// Zero can't have sign
+		if (is_zero())
+		{
+			is_negative_ = false;
+		}
 	}
 }

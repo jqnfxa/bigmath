@@ -7,16 +7,29 @@ namespace big
 	class integer {
 		bool is_negative_;
 		natural absolute_value_;
+
+		void normalize() & noexcept;
 	public:
+		// TODO should be explicit ?
 		integer(std::int64_t num = 0);
 
-		explicit integer(bool is_negative, const natural &natural);
+		explicit integer(const natural &natural);
 
-		explicit integer(bool is_negative, natural &&natural);
+		explicit integer(natural &&natural);
 
 		bool operator==(const integer &other) const & noexcept;
 
 		std::strong_ordering operator<=>(const integer &other) const & noexcept;
+
+		void flip_sing() & noexcept;
+
+		bool is_positive() const & noexcept;
+
+		natural abs() const & noexcept;
+
+		integer operator-() const & noexcept;
+
+		integer operator+() const & noexcept;
 
 		integer &operator++() & noexcept;
 
@@ -34,8 +47,7 @@ namespace big
 
 		integer &operator/=(const integer &other) &;
 
-		// TODO how to take % from negative integer??
-		//integer &operator%=(const integer &other) &;
+		integer &operator%=(const integer &other) &;
 
 		integer &operator<<=(std::size_t shift) &;
 
