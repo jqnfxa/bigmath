@@ -179,6 +179,7 @@ TEST(IntegerTestSuite, TestModule)
 	EXPECT_EQ(integer(-21) % integer(-7), integer(0));
 	EXPECT_EQ(integer(21) % integer(-7), integer(0));
 	EXPECT_EQ(integer(-21) % integer(7), integer(0));
+	EXPECT_EQ(integer(-2222) % integer(-3), integer(-2));
 
 	try
 	{
