@@ -21,9 +21,7 @@ namespace big
 		void nullify() & noexcept;
 
 	public:
-		natural();
-
-		natural(std::size_t num);
+		natural(std::size_t num = 0);
 
 		natural(const std::string &num);
 

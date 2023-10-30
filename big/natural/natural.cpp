@@ -7,10 +7,6 @@
 
 namespace big
 {
-	natural::natural() : natural(0)
-	{
-	}
-
 	// TODO use natural(std::to_string(num)) instead?
 	natural::natural(std::size_t num)
 	{
