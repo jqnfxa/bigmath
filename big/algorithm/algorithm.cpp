@@ -2,6 +2,31 @@
 
 namespace big
 {
+	polynomial gcd(const polynomial &a, const polynomial &b)
+	{
+		if (a.degree() < b.degree())
+		{
+			return gcd(b, a);
+		}
+
+		polynomial first = a;
+		polynomial second = b;
+
+		while (second.degree() != 0)
+		{
+			polynomial temp = std::move(second);
+			second = std::move(first % temp);
+			first = std::move(temp);
+		}
+
+		if ((a % first).major_coefficient() == rational(0, 1) && (b % first).major_coefficient() == rational(0, 1))
+		{
+			return first;
+		}
+
+		return second;
+	}
+
 	natural gcd(const natural &a, const natural &b)
 	{
 		if (a < b)

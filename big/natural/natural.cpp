@@ -67,9 +67,9 @@ namespace big
 			return num_.size() <=> other.num_.size();
 		}
 
-		size_t order = num_.size() - 1;
+		std::size_t order = num_.size() - 1;
 
-		for (size_t i = 0; i <= order; ++i)
+		for (std::size_t i = 0; i <= order; ++i)
 		{
 			if (num_[order - i] != other.num_[order - i])
 			{
@@ -112,13 +112,13 @@ namespace big
 		auto max_order = std::max(num_.size(), other.num_.size());
 		num_.resize(max_order + 1);
 
-		for (size_t i = 0; i < other.num_.size(); ++i)
+		for (std::size_t i = 0; i < other.num_.size(); ++i)
 		{
 			num_[i] += other.num_[i];
 			num_[i + 1] += num_[i] / base;
 			num_[i] %= base;
 		}
-		for (size_t i = other.num_.size(); i < max_order; ++i)
+		for (std::size_t i = other.num_.size(); i < max_order; ++i)
 		{
 			num_[i + 1] += num_[i] / base;
 			num_[i] %= base;
@@ -135,12 +135,12 @@ namespace big
 			throw std::domain_error("Unable to subtract the greater natural");
 		}
 
-		for (size_t i = 0; i < other.num_.size(); ++i)
+		for (std::size_t i = 0; i < other.num_.size(); ++i)
 		{
 			// TODO Put it in a separate method?
 			if (num_[i] < other.num_[i])
 			{
-				size_t borrow_position = i + 1;
+				std::size_t borrow_position = i + 1;
 
 				while (borrow_position < num_.size() && num_[borrow_position] == 0)
 				{
@@ -149,7 +149,7 @@ namespace big
 
 				--num_[borrow_position];
 
-				for (size_t j = borrow_position - 1; j > i; --j)
+				for (std::size_t j = borrow_position - 1; j > i; --j)
 				{
 					num_[j] += base - 1;
 				}
@@ -177,9 +177,9 @@ namespace big
 		auto cur_num_len = num_.size();
 		auto other_num_len = other.num_.size();
 
-		for (size_t i = 0; i < cur_num_len; ++i)
+		for (std::size_t i = 0; i < cur_num_len; ++i)
 		{
-			for (size_t j = 0; j < other_num_len; ++j)
+			for (std::size_t j = 0; j < other_num_len; ++j)
 			{
 				result[i + j] += num_[i] * other.num_[j];
 

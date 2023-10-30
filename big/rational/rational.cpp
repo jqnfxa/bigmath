@@ -125,4 +125,9 @@ namespace big
 		temp /= other;
 		return temp;
 	}
+
+	bool rational::operator==(const rational &other) const & noexcept
+	{
+		return numerator_ == other.numerator_ && denominator_ == other.denominator_;
+	}
 }

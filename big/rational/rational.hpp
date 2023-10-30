@@ -43,5 +43,7 @@ namespace big
 		rational operator*(const rational &other) const & noexcept;
 
 		rational operator/(const rational &other) const &;
+
+		bool operator==(const rational &other) const & noexcept;
 	};
 }
