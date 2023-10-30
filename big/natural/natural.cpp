@@ -8,7 +8,7 @@
 namespace big
 {
 	// TODO use natural(std::to_string(num)) instead?
-	natural::natural(std::size_t num)
+	natural::natural(std::size_t num) noexcept
 	{
 		num_representation new_num;
 
@@ -22,7 +22,7 @@ namespace big
 		erase_leading_zeroes();
 	}
 
-	natural::natural(const std::string &num)
+	natural::natural(const std::string &num) noexcept
 	{
 		num_representation new_num;
 		new_num.reserve(num.size());
