@@ -169,13 +169,13 @@ namespace big
 
 	polynomial &polynomial::operator/=(const polynomial &other) &
 	{
-		coefficients_ = std::move(divide_by(other).first.coefficients_);
+		coefficients_ = std::move(long_div(other).first.coefficients_);
 		return *this;
 	}
 
 	polynomial &polynomial::operator%=(const polynomial &other) &
 	{
-		coefficients_ = std::move(divide_by(other).second.coefficients_);
+		coefficients_ = std::move(long_div(other).second.coefficients_);
 		return *this;
 	}
 
@@ -228,7 +228,7 @@ namespace big
 		return temp;
 	}
 
-	std::pair<polynomial, polynomial> polynomial::divide_by(const polynomial &other) &
+	std::pair<polynomial, polynomial> polynomial::long_div(const polynomial &other) &
 	{
 		if (other.degree() == 0 && other.major_coefficient().numerator().is_zero())
 		{

@@ -200,13 +200,13 @@ namespace big
 
 	natural &natural::operator/=(const natural &other) &
 	{
-		num_ = std::move(divide_by(other).first.num_);
+		num_ = std::move(long_div(other).first.num_);
 		return *this;
 	}
 
 	natural &natural::operator%=(const natural &other) &
 	{
-		num_ = std::move(divide_by(other).second.num_);
+		num_ = std::move(long_div(other).second.num_);
 		return *this;
 	}
 
@@ -338,7 +338,7 @@ namespace big
 	}
 
 	// TODO function is fast but not efficient (many copies)
-	std::pair<natural, natural> natural::divide_by(const natural &divisor) const &
+	std::pair<natural, natural> natural::long_div(const natural &divisor) const &
 	{
 		if (divisor.is_zero())
 		{

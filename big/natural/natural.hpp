@@ -69,7 +69,7 @@ namespace big
 
 		[[nodiscard]] bool is_zero() const & noexcept;
 
-		[[nodiscard]] std::pair<natural, natural> divide_by(const natural &divisor) const &;
+		[[nodiscard]] std::pair<natural, natural> long_div(const natural &divisor) const &;
 
 		[[nodiscard]] std::string to_str() const & noexcept;
 

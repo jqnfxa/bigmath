@@ -52,6 +52,6 @@ namespace big
 
 		polynomial operator%(const polynomial &other) const &;
 
-		std::pair<polynomial, polynomial> divide_by(const polynomial &other) &;
+		std::pair<polynomial, polynomial> long_div(const polynomial &other) &;
 	};
 }

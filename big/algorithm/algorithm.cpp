@@ -1,3 +1,4 @@
+#include <utility>
 #include "algorithm.hpp"
 
 namespace big
@@ -14,9 +15,7 @@ namespace big
 
 		while (second.degree() != 0)
 		{
-			polynomial temp = std::move(second);
-			second = std::move(first % temp);
-			first = std::move(temp);
+			first = std::exchange(second, first % second);
 		}
 
 		if ((a % first).major_coefficient() == rational(0, 1) && (b % first).major_coefficient() == rational(0, 1))
@@ -39,9 +38,7 @@ namespace big
 
 		while (!second.is_zero())
 		{
-			natural temp = std::move(second);
-			second = std::move(first % temp);
-			first = std::move(temp);
+			first = std::exchange(second, first % second);
 		}
 
 		return first;
