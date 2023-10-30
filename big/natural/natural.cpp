@@ -11,6 +11,21 @@ namespace big
 	{
 	}
 
+	// TODO use natural(std::to_string(num)) instead?
+	natural::natural(std::size_t num)
+	{
+		num_representation new_num;
+
+		do
+		{
+			new_num.push_back(num % base);
+			num /= base;
+		} while (num != 0);
+
+		num_ = std::move(new_num);
+		erase_leading_zeroes();
+	}
+
 	natural::natural(const std::string &num)
 	{
 		num_representation new_num;
@@ -28,8 +43,19 @@ namespace big
 		erase_leading_zeroes();
 	}
 
-	natural::natural(std::size_t num) : natural(std::to_string(num))
+	natural::natural(const natural::num_representation &num)
 	{
+		for (auto &item: num)
+		{
+			if (item >= base)
+			{
+				throw std::invalid_argument(
+					std::to_string(item) + " cannot be represented in " + std::to_string(base) + " system");
+			}
+		}
+
+		num_ = num;
+		erase_leading_zeroes();
 	}
 
 	// TODO how to handle == and != in <=> operator?
@@ -61,7 +87,7 @@ namespace big
 
 	natural &natural::operator++() & noexcept
 	{
-		*this += natural("1");
+		*this += 1;
 		return *this;
 	}
 
@@ -74,7 +100,7 @@ namespace big
 
 	natural &natural::operator--() & noexcept
 	{
-		*this -= natural("1");
+		*this -= 1;
 		return *this;
 	}
 
@@ -103,7 +129,6 @@ namespace big
 		}
 
 		erase_leading_zeroes();
-
 		return *this;
 	}
 
@@ -139,7 +164,6 @@ namespace big
 		}
 
 		erase_leading_zeroes();
-
 		return *this;
 	}
 
@@ -326,17 +350,17 @@ namespace big
 		}
 		if (*this < divisor)
 		{
-			return {natural(0), *this};
+			return {0, *this};
 		}
 
-		natural quotient(0);
-		natural remainder(0);
-		natural count(0);
+		natural quotient;
+		natural remainder;
+		natural count;
 
 		for (auto it: std::ranges::reverse_view(num_))
 		{
 			remainder <<= 1;
-			remainder += natural(it);
+			remainder += it;
 
 			while (remainder >= divisor)
 			{
@@ -350,6 +374,7 @@ namespace big
 		}
 
 		quotient.erase_leading_zeroes();
+		remainder.erase_leading_zeroes();
 
 		return {quotient, remainder};
 	}
