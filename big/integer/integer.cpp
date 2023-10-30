@@ -4,16 +4,17 @@
 
 namespace big
 {
-	integer::integer(std::int64_t num) : is_negative_(num < 0), absolute_value_(std::to_string(num))
+	integer::integer(std::int64_t num) noexcept: integer(num, num < 0)
 	{
 	}
 
-	integer::integer(const natural &natural, bool is_negative) : is_negative_(is_negative), absolute_value_(natural)
+	integer::integer(const natural &natural, bool is_negative) noexcept: absolute_value_(natural),
+																		 is_negative_(is_negative)
 	{
 	}
 
-	integer::integer(natural &&natural, bool is_negative) : is_negative_(is_negative),
-															absolute_value_(std::move(natural))
+	integer::integer(natural &&natural, bool is_negative) noexcept: absolute_value_(std::move(natural)),
+																	is_negative_(is_negative)
 	{
 	}
 
@@ -53,7 +54,7 @@ namespace big
 		return !is_negative_;
 	}
 
-	natural integer::abs() const & noexcept
+	const natural &integer::abs() const & noexcept
 	{
 		return absolute_value_;
 	}
@@ -67,12 +68,12 @@ namespace big
 
 	integer integer::operator+() const & noexcept
 	{
-		return integer(*this);
+		return {*this};
 	}
 
 	integer &integer::operator++() & noexcept
 	{
-		*this += integer(1);
+		*this += 1;
 		return *this;
 	}
 
@@ -85,7 +86,7 @@ namespace big
 
 	integer &integer::operator--() & noexcept
 	{
-		*this -= integer(1);
+		*this -= 1;
 		return *this;
 	}
 
@@ -108,8 +109,8 @@ namespace big
 			flip_sing();
 			*this = std::move(other - *this);
 		}
-		normalize();
 
+		normalize();
 		return *this;
 	}
 
@@ -132,8 +133,8 @@ namespace big
 				absolute_value_ = std::move(absolute_value_ - other.absolute_value_);
 			}
 		}
-		normalize();
 
+		normalize();
 		return *this;
 	}
 
@@ -141,8 +142,8 @@ namespace big
 	{
 		is_negative_ ^= other.is_negative_;
 		absolute_value_ *= other.absolute_value_;
-		normalize();
 
+		normalize();
 		return *this;
 	}
 
@@ -150,8 +151,8 @@ namespace big
 	{
 		is_negative_ ^= other.is_negative_;
 		absolute_value_ /= other.absolute_value_;
-		normalize();
 
+		normalize();
 		return *this;
 	}
 
@@ -165,23 +166,22 @@ namespace big
 		}
 
 		normalize();
-
 		return *this;
 	}
 
 	integer &integer::operator<<=(std::size_t shift) &
 	{
 		absolute_value_ <<= shift;
-		normalize();
 
+		normalize();
 		return *this;
 	}
 
 	integer &integer::operator>>=(std::size_t shift) & noexcept
 	{
 		absolute_value_ >>= shift;
-		normalize();
 
+		normalize();
 		return *this;
 	}
 

@@ -9,13 +9,13 @@ namespace big
 		natural absolute_value_;
 
 		void normalize() & noexcept;
+
 	public:
-		// TODO should be explicit ?
-		integer(std::int64_t num = 0);
+		integer(std::int64_t num = 0) noexcept;
 
-		explicit integer(const natural &natural, bool is_negative = false);
+		explicit integer(const natural &natural, bool is_negative = false) noexcept;
 
-		explicit integer(natural &&natural, bool is_negative = false);
+		explicit integer(natural &&natural, bool is_negative = false) noexcept;
 
 		bool operator==(const integer &other) const & noexcept;
 
