@@ -22,6 +22,10 @@ namespace big
 
 		[[nodiscard]] bool is_integer() const & noexcept;
 
+		[[nodiscard]] const integer &numerator() const & noexcept;
+
+		[[nodiscard]] const natural &denominator() const & noexcept;
+
 		[[nodiscard]] rational inverse() const &;
 
 		rational &operator+=(const rational &other) & noexcept;

@@ -22,6 +22,9 @@ namespace big
 		{
 			throw std::invalid_argument("It is impossible to represent a fraction with denominator 0");
 		}
+
+		// Normalize fraction
+		reduce();
 	}
 
 	void rational::reduce() & noexcept
@@ -37,11 +40,21 @@ namespace big
 		return denominator_ == 1;
 	}
 
+	const integer &rational::numerator() const & noexcept
+	{
+		return numerator_;
+	}
+
+	const natural &rational::denominator() const & noexcept
+	{
+		return denominator_;
+	}
+
 	rational rational::inverse() const &
 	{
 		if (numerator_.abs().is_zero())
 		{
-			throw std::domain_error("There is no multiplication inverse for zero");
+			throw std::logic_error("There is no multiplication inverse for zero");
 		}
 
 		return rational{integer(denominator_, !numerator_.is_positive()), numerator_.abs()};
@@ -49,14 +62,8 @@ namespace big
 
 	rational &rational::operator+=(const rational &other) & noexcept
 	{
-		integer a(numerator_);
-		integer b(denominator_);
-
-		integer c(other.numerator_);
-		integer d(other.denominator_);
-
-		numerator_ = std::move(a * d + b * c);
-		denominator_ = (b * d).abs();
+		numerator_ = std::move(numerator_ * integer(other.denominator_) + integer(denominator_) * other.numerator_);
+		denominator_ *= other.denominator_;
 
 		// Normalize fraction
 		reduce();

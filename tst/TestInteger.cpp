@@ -1,5 +1,6 @@
 #include "../big/integer/integer.hpp"
 #include "gtest/gtest.h"
+#include "rational/rational.hpp"
 
 TEST(IntegerTestSuite, TestComparison)
 {
@@ -196,5 +197,32 @@ TEST(IntegerTestSuite, TestModule)
 	catch (const std::domain_error &e)
 	{
 		EXPECT_EQ(e.what(), std::string("Cannot divide by zero"));
+	}
+}
+
+TEST(IntegerTestSuite, TestConstruct)
+{
+	using namespace big;
+
+	{
+		rational b(16, 5);
+		integer a(b);
+
+		ASSERT_EQ(a.to_str(), "3");
+		ASSERT_EQ(a, 3);
+	}
+	{
+		rational b(-165477446, 5395);
+		integer a(b);
+
+		ASSERT_EQ(a.to_str(), "-30672");
+		ASSERT_EQ(a, -30672);
+	}
+	{
+		rational b(-1654, 5395);
+		integer a(b);
+
+		ASSERT_EQ(a.to_str(), "0");
+		ASSERT_EQ(a, 0);
 	}
 }

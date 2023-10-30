@@ -1,10 +1,11 @@
 #include <ranges>
 #include <sstream>
 #include "integer.hpp"
+#include "rational/rational.hpp"
 
 namespace big
 {
-	integer::integer(std::int64_t num) noexcept: integer(num, num < 0)
+	integer::integer(std::int64_t num) noexcept: integer(std::abs(num), num < 0)
 	{
 	}
 
@@ -16,6 +17,13 @@ namespace big
 	integer::integer(natural &&natural, bool is_negative) noexcept: absolute_value_(std::move(natural)),
 																	is_negative_(is_negative)
 	{
+	}
+
+	integer::integer(const rational &other) noexcept
+	{
+		is_negative_ = other.numerator().is_negative_;
+		absolute_value_ = std::move(other.numerator().abs() / other.denominator());
+		normalize();
 	}
 
 	bool integer::operator==(const integer &other) const & noexcept

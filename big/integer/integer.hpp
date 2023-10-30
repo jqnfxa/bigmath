@@ -4,6 +4,8 @@
 
 namespace big
 {
+	class rational;
+
 	class integer {
 		bool is_negative_;
 		natural absolute_value_;
@@ -16,6 +18,8 @@ namespace big
 		explicit integer(const natural &natural, bool is_negative = false) noexcept;
 
 		explicit integer(natural &&natural, bool is_negative = false) noexcept;
+
+		explicit integer(const rational &other) noexcept;
 
 		bool operator==(const integer &other) const & noexcept;
 
