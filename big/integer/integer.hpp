@@ -13,9 +13,9 @@ namespace big
 		// TODO should be explicit ?
 		integer(std::int64_t num = 0);
 
-		explicit integer(const natural &natural);
+		explicit integer(const natural &natural, bool is_negative = false);
 
-		explicit integer(natural &&natural);
+		explicit integer(natural &&natural, bool is_negative = false);
 
 		bool operator==(const integer &other) const & noexcept;
 
@@ -23,9 +23,9 @@ namespace big
 
 		void flip_sing() & noexcept;
 
-		bool is_positive() const & noexcept;
+		[[nodiscard]] bool is_positive() const & noexcept;
 
-		natural abs() const & noexcept;
+		[[nodiscard]] const natural &abs() const & noexcept;
 
 		integer operator-() const & noexcept;
 
@@ -69,7 +69,7 @@ namespace big
 
 		[[nodiscard]] bool is_zero() const & noexcept;
 
-		std::string to_str() const & noexcept;
+		[[nodiscard]] std::string to_str() const & noexcept;
 
 		friend std::ostream &operator<<(std::ostream &out, const integer &num);
 	};

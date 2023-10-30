@@ -8,11 +8,12 @@ namespace big
 	{
 	}
 
-	integer::integer(const natural &natural) : is_negative_(false), absolute_value_(natural)
+	integer::integer(const natural &natural, bool is_negative) : is_negative_(is_negative), absolute_value_(natural)
 	{
 	}
 
-	integer::integer(natural &&natural) : is_negative_(false), absolute_value_(std::move(natural))
+	integer::integer(natural &&natural, bool is_negative) : is_negative_(is_negative),
+															absolute_value_(std::move(natural))
 	{
 	}
 
