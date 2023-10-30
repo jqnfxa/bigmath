@@ -155,7 +155,6 @@ TEST(PolynomialTestSuite, PolynomialMinus)
 TEST(PolynomialTestSuite, PolynomialMulWithPolunomial)
 {
 	using namespace big;
-
 	// TODO implement
 	FAIL();
 }
