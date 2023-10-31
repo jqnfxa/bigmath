@@ -16,7 +16,7 @@ namespace big
 
 		explicit rational(integer &&num) noexcept;
 
-		explicit rational(integer numerator, natural denominator);
+		rational(integer numerator, natural denominator);
 
 		void reduce() & noexcept;
 

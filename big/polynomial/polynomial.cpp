@@ -44,9 +44,8 @@ namespace big
 
 		for (std::size_t i = 1; i < temp.coefficients_.size(); ++i)
 		{
-			temp.coefficients_[i - 1] = temp.coefficients_[i] * rational(i, 1);
+			temp.coefficients_[i - 1] = temp.coefficients_[i] * rational(integer(natural(i)), 1);
 		}
-
 		if (temp.degree() > 0)
 		{
 			temp.coefficients_.pop_back();
@@ -58,25 +57,63 @@ namespace big
 	polynomial polynomial::fac() const & noexcept
 	{
 		polynomial temp(*this);
-
-		integer numerators_gcd = temp.coefficients_.front().numerator();
-		natural denominators_lcm = temp.coefficients_.front().denominator();
-
-		for (auto &coefficient: temp.coefficients_)
-		{
-			numerators_gcd = integer(std::move(gcd(numerators_gcd.abs(), coefficient.numerator().abs())));
-			denominators_lcm = std::move(gcd(denominators_lcm, coefficient.denominator()));
-		}
-
-		rational coeff(numerators_gcd, denominators_lcm);
-		rational inv = coeff.inverse();
-
-		for (auto &coefficient: temp.coefficients_)
-		{
-			coefficient *= inv;
-		}
-
+		temp.fac();
 		return temp;
+	}
+
+	void polynomial::fac() & noexcept
+	{
+		integer numerators_gcd = coefficients_.front().numerator();
+		natural denominators_lcm = coefficients_.front().denominator();
+
+		bool sign = !numerators_gcd.is_positive();
+
+		for (auto &coefficient: coefficients_)
+		{
+			sign ^= !coefficient.numerator().is_positive();
+			numerators_gcd = integer(std::move(gcd(numerators_gcd.abs(), coefficient.numerator().abs())));
+			denominators_lcm = std::move(lcm(denominators_lcm, coefficient.denominator()));
+		}
+
+		if (!numerators_gcd.is_positive() ^ sign)
+		{
+			numerators_gcd.flip_sing();
+		}
+
+		rational coefficient(std::move(numerators_gcd), std::move(denominators_lcm));
+		*this *= coefficient.inverse();
+	}
+
+	polynomial polynomial::nmr() const & noexcept
+	{
+		polynomial temp(*this);
+		temp /= gcd(temp, derivative());
+		temp.fac();
+		return temp;
+	}
+
+	rational &polynomial::at(std::size_t degree) &
+	{
+		return const_cast<rational &>(const_cast<const polynomial *>(this)->at(degree));
+	}
+
+	const rational &polynomial::at(std::size_t degree) const &
+	{
+		if (degree >= coefficients_.size())
+		{
+			throw std::out_of_range("Degree is out of range");
+		}
+		return coefficients_[degree];
+	}
+
+	rational &polynomial::operator[](std::size_t degree) &
+	{
+		return at(degree);
+	}
+
+	const rational &polynomial::operator[](std::size_t degree) const &
+	{
+		return at(degree);
 	}
 
 	polynomial &polynomial::operator+=(const polynomial &other) & noexcept
@@ -94,14 +131,10 @@ namespace big
 
 	polynomial &polynomial::operator-=(const polynomial &other) & noexcept
 	{
-		coefficients_.resize(std::max(degree(), other.degree()) + 1, rational(0, 1));
+		*this *= rational(-1, 1);
+		*this += other;
+		*this *= rational(-1, 1);
 
-		for (std::size_t i = 0; i < other.coefficients_.size(); ++i)
-		{
-			coefficients_[i] -= other.coefficients_[i];
-		}
-
-		shrink_to_fit();
 		return *this;
 	}
 
@@ -228,25 +261,36 @@ namespace big
 		return temp;
 	}
 
-	std::pair<polynomial, polynomial> polynomial::long_div(const polynomial &other) &
+	std::pair<polynomial, polynomial> polynomial::long_div(const polynomial &divisor) const &
 	{
-		if (other.degree() == 0 && other.major_coefficient().numerator().is_zero())
+		if (divisor.degree() == 0 && divisor.major_coefficient().numerator().is_zero())
 		{
 			throw std::logic_error("Cannot divide by 0");
 		}
+		if (divisor.degree() > degree())
+		{
+			return {polynomial(), *this};
+		}
 
 		polynomial remainder = *this;
-		polynomial divisor = other;
 		polynomial quotient;
 
-		while (remainder.degree() >= divisor.degree())
+		quotient <<= remainder.degree() - divisor.degree();
+
+		while (remainder.degree() >= divisor.degree() && !remainder.major_coefficient().numerator().is_zero())
 		{
-			rational new_coefficient = remainder.major_coefficient() / divisor.major_coefficient();
+			auto new_coefficient = remainder.major_coefficient() / divisor.major_coefficient();
+			auto degree = remainder.degree() - divisor.degree();
 
-			quotient <<= 1;
-			quotient.coefficients_.front() = new_coefficient;
+			// Store new coefficient
+			quotient[degree] = new_coefficient;
 
-			remainder -= (divisor << (remainder.degree() - divisor.degree())) * new_coefficient;
+			// Subtraction of the next polynomial
+			polynomial divisible({new_coefficient});
+			divisible <<= degree;
+			divisible *= divisor;
+
+			remainder -= divisible;
 		}
 
 		quotient.shrink_to_fit();

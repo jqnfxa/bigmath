@@ -24,6 +24,18 @@ namespace big
 
 		[[nodiscard]] polynomial fac() const & noexcept;
 
+		void fac() & noexcept;
+
+		[[nodiscard]] polynomial nmr() const & noexcept;
+
+		rational &at(std::size_t degree) &;
+
+		[[nodiscard]] const rational &at(std::size_t degree) const &;
+
+		rational &operator[](std::size_t degree) &;
+
+		const rational &operator[](std::size_t degree) const &;
+
 		polynomial &operator+=(const polynomial &other) & noexcept;
 
 		polynomial &operator-=(const polynomial &other) & noexcept;
@@ -52,6 +64,6 @@ namespace big
 
 		polynomial operator%(const polynomial &other) const &;
 
-		std::pair<polynomial, polynomial> long_div(const polynomial &other) &;
+		[[nodiscard]] std::pair<polynomial, polynomial> long_div(const polynomial &divisor) const &;
 	};
 }
