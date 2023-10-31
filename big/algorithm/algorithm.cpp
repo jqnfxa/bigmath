@@ -48,4 +48,40 @@ namespace big
 	{
 		return a * b / gcd(a, b);
 	}
+
+	rational pow(rational num, integer base)
+	{
+		if (base < 0)
+		{
+			base.flip_sing();
+			return rational(1, 1) / pow(num, base);
+		}
+		if (num.numerator().abs() == 1)
+		{
+			if (base % 2 == 0 && num.numerator() < 0 || base % 2 != 0 && num.numerator() > 0)
+			{
+				num *= {-1, 1};
+			}
+
+			return num;
+		}
+
+		rational result(1, 1);
+
+		while (base > 0)
+		{
+			if (base % 2 == 0)
+			{
+				num *= num;
+				base /= 2;
+			}
+			else
+			{
+				result *= num;
+				--base;
+			}
+		}
+
+		return result;
+	}
 }
