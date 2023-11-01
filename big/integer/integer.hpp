@@ -7,13 +7,13 @@ namespace big
 	class rational;
 
 	class integer {
-		bool is_negative_;
-		natural absolute_value_;
+		bool sign_bit_;
+		natural abs_;
 
 		void normalize() & noexcept;
 
 	public:
-		integer(std::int64_t num = 0) noexcept;
+		integer(std::intmax_t num = 0) noexcept;
 
 		explicit integer(const natural &natural, bool is_negative = false) noexcept;
 
@@ -27,7 +27,7 @@ namespace big
 
 		void flip_sing() & noexcept;
 
-		[[nodiscard]] bool is_positive() const & noexcept;
+		[[nodiscard]] bool sign_bit() const & noexcept;
 
 		[[nodiscard]] const natural &abs() const & noexcept;
 
@@ -45,11 +45,19 @@ namespace big
 
 		integer &operator+=(const integer &other) & noexcept;
 
+		integer &operator+=(const natural &other) & noexcept;
+
 		integer &operator-=(const integer &other) &;
+
+		integer &operator-=(const natural &other) &;
 
 		integer &operator*=(const integer &other) & noexcept;
 
+		integer &operator*=(const natural &other) & noexcept;
+
 		integer &operator/=(const integer &other) &;
+
+		integer &operator/=(const natural &other) &;
 
 		integer &operator%=(const integer &other) &;
 
@@ -59,11 +67,19 @@ namespace big
 
 		integer operator+(const integer &other) const & noexcept;
 
+		integer operator+(const natural &other) const & noexcept;
+
 		integer operator-(const integer &other) const &;
+
+		integer operator-(const natural &other) const &;
 
 		integer operator*(const integer &other) const & noexcept;
 
+		integer operator*(const natural &other) const & noexcept;
+
 		integer operator/(const integer &other) const &;
+
+		integer operator/(const natural &other) const &;
 
 		integer operator%(const integer &other) const &;
 
@@ -75,6 +91,6 @@ namespace big
 
 		[[nodiscard]] std::string to_str() const & noexcept;
 
-		friend std::ostream &operator<<(std::ostream &out, const integer &num);
+		friend std::ostream &operator<<(std::ostream &out, const integer &num) noexcept;
 	};
 }

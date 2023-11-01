@@ -5,24 +5,22 @@
 
 namespace big
 {
-	integer::integer(std::int64_t num) noexcept: integer(std::abs(num), num < 0)
+	// TODO std::abs will cause overflow when num == std::intmax_t::min?
+	integer::integer(std::intmax_t num) noexcept: integer(std::abs(num), num < 0)
 	{
 	}
 
-	integer::integer(const natural &natural, bool is_negative) noexcept: absolute_value_(natural),
-																		 is_negative_(is_negative)
+	integer::integer(const natural &natural, bool is_negative) noexcept: sign_bit_(is_negative), abs_(natural)
 	{
 	}
 
-	integer::integer(natural &&natural, bool is_negative) noexcept: absolute_value_(std::move(natural)),
-																	is_negative_(is_negative)
+	integer::integer(natural &&natural, bool is_negative) noexcept: sign_bit_(is_negative), abs_(std::move(natural))
 	{
 	}
 
 	integer::integer(const rational &other) noexcept
 	{
-		is_negative_ = other.numerator().is_negative_;
-		absolute_value_ = std::move(other.numerator().abs() / other.denominator());
+		*this = std::move(other.numerator() / other.denominator());
 		normalize();
 	}
 
@@ -33,9 +31,9 @@ namespace big
 
 	std::strong_ordering integer::operator<=>(const integer &other) const & noexcept
 	{
-		if (is_negative_ ^ other.is_negative_)
+		if (sign_bit_ ^ other.sign_bit_)
 		{
-			if (is_negative_ && !other.is_negative_)
+			if (sign_bit_ && !other.sign_bit_)
 			{
 				return std::strong_ordering::less;
 			}
@@ -43,35 +41,33 @@ namespace big
 			return std::strong_ordering::greater;
 		}
 
-		if (is_negative_ && other.is_negative_)
+		if (sign_bit_ && other.sign_bit_)
 		{
 			// Since both nums have '-' then greater absolute value means less integer
-			return other.absolute_value_ <=> absolute_value_;
+			return other.abs_ <=> abs_;
 		}
 
-		return absolute_value_ <=> other.absolute_value_;
+		return abs_ <=> other.abs_;
 	}
 
 	void integer::flip_sing() & noexcept
 	{
-		is_negative_ = !is_negative_;
+		sign_bit_ = !sign_bit_;
 	}
 
-	bool integer::is_positive() const & noexcept
+	bool integer::sign_bit() const & noexcept
 	{
-		return !is_negative_;
+		return sign_bit_;
 	}
 
 	const natural &integer::abs() const & noexcept
 	{
-		return absolute_value_;
+		return abs_;
 	}
 
 	integer integer::operator-() const & noexcept
 	{
-		integer temp(*this);
-		temp.flip_sing();
-		return temp;
+		return integer(abs(), !sign_bit_);
 	}
 
 	integer integer::operator+() const & noexcept
@@ -81,7 +77,7 @@ namespace big
 
 	integer &integer::operator++() & noexcept
 	{
-		*this += 1;
+		*this += integer(1);
 		return *this;
 	}
 
@@ -94,7 +90,7 @@ namespace big
 
 	integer &integer::operator--() & noexcept
 	{
-		*this -= 1;
+		*this -= integer(1);
 		return *this;
 	}
 
@@ -108,9 +104,9 @@ namespace big
 	integer &integer::operator+=(const integer &other) & noexcept
 	{
 		// If integers have same sign then just sum absolute values
-		if (is_negative_ == other.is_negative_)
+		if (sign_bit_ == other.sign_bit_)
 		{
-			absolute_value_ += other.absolute_value_;
+			abs_ += other.abs_;
 		}
 		else
 		{
@@ -122,53 +118,79 @@ namespace big
 		return *this;
 	}
 
+	integer &integer::operator+=(const natural &other) & noexcept
+	{
+		*this += integer(other);
+		return *this;
+	}
+
 	integer &integer::operator-=(const integer &other) &
 	{
 		// If integers have different sing then we can just sum absolute values
-		if (is_negative_ ^ other.is_negative_)
+		if (sign_bit_ ^ other.sign_bit_)
 		{
-			absolute_value_ += other.absolute_value_;
+			abs_ += other.abs_;
 		}
 		else
 		{
-			if (absolute_value_ < other.absolute_value_)
+			if (abs_ < other.abs_)
 			{
 				flip_sing();
-				absolute_value_ = std::move(other.absolute_value_ - absolute_value_);
+				abs_ = std::move(other.abs_ - abs_);
 			}
 			else
 			{
-				absolute_value_ = std::move(absolute_value_ - other.absolute_value_);
+				abs_ = std::move(abs_ - other.abs_);
 			}
 		}
 
 		normalize();
+		return *this;
+	}
+
+	integer &integer::operator-=(const natural &other) &
+	{
+		*this -= integer(other);
 		return *this;
 	}
 
 	integer &integer::operator*=(const integer &other) & noexcept
 	{
-		is_negative_ ^= other.is_negative_;
-		absolute_value_ *= other.absolute_value_;
+		sign_bit_ ^= other.sign_bit_;
+		*this *= other.abs();
 
+		return *this;
+	}
+
+	integer &integer::operator*=(const natural &other) & noexcept
+	{
+		abs_ *= other;
 		normalize();
+
 		return *this;
 	}
 
 	integer &integer::operator/=(const integer &other) &
 	{
-		is_negative_ ^= other.is_negative_;
-		absolute_value_ /= other.absolute_value_;
+		sign_bit_ ^= other.sign_bit_;
+		*this /= other.abs();
 
+		return *this;
+	}
+
+	integer &integer::operator/=(const natural &other) &
+	{
+		abs_ /= other;
 		normalize();
+
 		return *this;
 	}
 
 	integer &integer::operator%=(const integer &other) &
 	{
-		absolute_value_ %= other.absolute_value_;
+		abs_ %= other.abs_;
 
-		if (!is_zero() && is_negative_ ^ other.is_negative_)
+		if (!is_zero() && sign_bit_ ^ other.sign_bit_)
 		{
 			*this += other;
 		}
@@ -179,21 +201,29 @@ namespace big
 
 	integer &integer::operator<<=(std::size_t shift) &
 	{
-		absolute_value_ <<= shift;
-
+		abs_ <<= shift;
 		normalize();
+
 		return *this;
 	}
 
 	integer &integer::operator>>=(std::size_t shift) & noexcept
 	{
-		absolute_value_ >>= shift;
-
+		abs_ >>= shift;
 		normalize();
+
 		return *this;
 	}
 
+	// TODO think how we can merge these methods (i.e. +,-,*,/ with integer and +,-,*,/ with natural is absolutely the same)
 	integer integer::operator+(const integer &other) const & noexcept
+	{
+		integer temp(*this);
+		temp += other;
+		return temp;
+	}
+
+	integer integer::operator+(const natural &other) const & noexcept
 	{
 		integer temp(*this);
 		temp += other;
@@ -207,6 +237,13 @@ namespace big
 		return temp;
 	}
 
+	integer integer::operator-(const natural &other) const &
+	{
+		integer temp(*this);
+		temp -= other;
+		return temp;
+	}
+
 	integer integer::operator*(const integer &other) const & noexcept
 	{
 		integer temp(*this);
@@ -214,7 +251,21 @@ namespace big
 		return temp;
 	}
 
+	integer integer::operator*(const natural &other) const & noexcept
+	{
+		integer temp(*this);
+		temp *= other;
+		return temp;
+	}
+
 	integer integer::operator/(const integer &other) const &
+	{
+		integer temp(*this);
+		temp /= other;
+		return temp;
+	}
+
+	integer integer::operator/(const natural &other) const &
 	{
 		integer temp(*this);
 		temp /= other;
@@ -244,26 +295,23 @@ namespace big
 
 	bool integer::is_zero() const & noexcept
 	{
-		return absolute_value_.is_zero();
+		return abs_.is_zero();
 	}
 
 	std::string integer::to_str() const & noexcept
 	{
 		std::ostringstream ss;
-
-		if (is_negative_)
-		{
-			ss << '-';
-		}
-
-		ss << absolute_value_.to_str();
-
+		ss << *this;
 		return ss.str();
 	}
 
-	std::ostream &operator<<(std::ostream &out, const integer &num)
+	std::ostream &operator<<(std::ostream &out, const integer &num) noexcept
 	{
-		return out << num.to_str();
+		if (num.sign_bit())
+		{
+			out << '-';
+		}
+		return out << num.abs();
 	}
 
 	void integer::normalize() & noexcept
@@ -271,7 +319,7 @@ namespace big
 		// Zero can't have sign
 		if (is_zero())
 		{
-			is_negative_ = false;
+			sign_bit_ = false;
 		}
 	}
 }
