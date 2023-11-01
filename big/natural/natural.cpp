@@ -8,9 +8,15 @@
 
 namespace big
 {
-	natural::natural(std::size_t num) noexcept
+	natural::natural(std::uintmax_t num) noexcept
 	{
-		digits_.push_back(num);
+		do
+		{
+			digits_.push_back(num % numeral_system_base);
+			num /= numeral_system_base;
+		} while (num != 0);
+
+		erase_leading_zeroes();
 	}
 
 	natural::natural(const std::string &num) noexcept
@@ -18,7 +24,7 @@ namespace big
 		// TODO implement
 	}
 
-	natural::natural(const natural::num_representation &num)
+	natural::natural(const num_representation &num)
 	{
 		for (auto &item: num)
 		{
@@ -47,9 +53,9 @@ namespace big
 			return digits_.size() <=> other.digits_.size();
 		}
 
-		const auto order = digits_.size() - 1;
+		const auto &order = digits_.size() - 1;
 
-		for (std::size_t i = 0; i <= order; ++i)
+		for (size_type i = 0; i <= order; ++i)
 		{
 			if (digits_[order - i] != other.digits_[order - i])
 			{
@@ -63,7 +69,7 @@ namespace big
 
 	bool natural::is_even() const & noexcept
 	{
-		return digits_[0] % 2 == 0;
+		return digits_[0] & 1;
 	}
 
 	natural &natural::operator++() & noexcept
@@ -94,10 +100,9 @@ namespace big
 
 	natural &natural::operator+=(const natural &other) & noexcept
 	{
-		const auto max_order = std::max(digits_.size(), other.digits_.size());
-		digits_.resize(max_order + 1);
+		digits_.resize(std::max(digits_.size(), other.digits_.size()) + 1);
 
-		for (std::size_t i = 0; i < other.digits_.size(); ++i)
+		for (size_type i = 0; i < other.digits_.size(); ++i)
 		{
 			add_digit(other.digits_[i], i);
 		}
@@ -122,12 +127,10 @@ namespace big
 		return *this;
 	}
 
-	// TODO stop here
 	natural &natural::operator*=(const natural &other) & noexcept
 	{
 		if (is_zero() || other.is_zero())
 		{
-			// TODO how to assign zero value normally?
 			nullify();
 			return *this;
 		}
@@ -136,27 +139,29 @@ namespace big
 			return *this;
 		}
 
-		num_representation result(num_.size() + other.num_.size(), 0);
+		const auto this_len = digits_.size();
+		const auto other_len = other.digits_.size();
 
-		auto cur_num_len = num_.size();
-		auto other_num_len = other.num_.size();
+		num_representation result(this_len + other_len, 0);
 
-		for (std::size_t i = 0; i < cur_num_len; ++i)
+		for (size_type i = 0; i < this_len; ++i)
 		{
-			for (std::size_t j = 0; j < other_num_len; ++j)
+			for (size_type j = 0; j < other_len; ++j)
 			{
-				result[i + j] += num_[i] * other.num_[j];
+				std::uintmax_t product = digits_[i];
+				product *= other.digits_[j];
+				product += digits_[i + j];
 
-				if (result[i + j] >= base)
+				if (product >= numeral_system_base)
 				{
-					result[i + j + 1] += result[i + j] / base;
+					add_digit(product / numeral_system_base, i + j + 1);
 				}
 
-				result[i + j] %= base;
+				digits_[i + j] = product % numeral_system_base;
 			}
 		}
 
-		num_ = std::move(result);
+		digits_ = std::move(result);
 		erase_leading_zeroes();
 
 		return *this;
@@ -164,67 +169,51 @@ namespace big
 
 	natural &natural::operator/=(const natural &other) &
 	{
-		num_ = std::move(long_div(other).first.num_);
+		digits_ = std::move(long_div(other).first.digits_);
 		return *this;
 	}
 
 	natural &natural::operator%=(const natural &other) &
 	{
-		num_ = std::move(long_div(other).second.num_);
+		digits_ = std::move(long_div(other).second.digits_);
 		return *this;
 	}
 
 	natural &natural::operator<<=(std::size_t shift) &
 	{
-		if (num_.size() > std::numeric_limits<std::size_t>::max() - shift)
-		{
-			throw std::length_error("Impossible to perform shift without losing data");
-		}
+		const auto &size = digits_.size();
 
+		if (size > digits_.max_size() - shift)
+		{
+			throw std::length_error("impossible to perform shift without losing data");
+		}
 		if (is_zero() || shift == 0)
 		{
 			return *this;
 		}
 
-		num_.resize(num_.size() + shift);
+		digits_.resize(size + shift);
 
-		// TODO iterator::difference_type (long) vs shift (std::size_t)
-		auto old = std::next(num_.rbegin(), shift);
-		auto destination = num_.rbegin();
-
-		for (; old != num_.rend(); ++destination, ++old)
-		{
-			*destination = *old;
-		}
-		for (; destination != num_.rend(); ++destination)
-		{
-			*destination = 0;
-		}
+		const auto rbegin = digits_.rbegin();
+		std::copy(std::next(rbegin, shift), digits_.rend(), rbegin);
+		std::fill_n(digits_.begin(), shift, 0);
 
 		return *this;
 	}
 
 	natural &natural::operator>>=(std::size_t shift) & noexcept
 	{
-		if (is_zero() || shift == 0)
-		{
-			return *this;
-		}
-		if (shift >= num_.size())
+		if (is_zero() || shift == 0 || shift >= digits_.size())
 		{
 			nullify();
 			return *this;
 		}
 
-		// TODO iterator::difference_type (long) vs shift (std::size_t)
-		auto old = num_.begin() + shift;
+		const auto &size = digits_.size();
+		const auto begin = digits_.begin();
 
-		for (auto destination = num_.begin(); old != num_.end(); ++destination, ++old)
-		{
-			*destination = *old;
-		}
-
-		num_.resize(num_.size() - shift);
+		digits_.erase(begin, std::next(begin, shift));
+		digits_.resize(size - shift);
 
 		return *this;
 	}
@@ -280,25 +269,29 @@ namespace big
 
 	void natural::erase_leading_zeroes() & noexcept
 	{
-		while (num_.size() > 1 && num_.back() == 0)
+		while (digits_.size() > 1 && digits_.back() == 0)
 		{
-			num_.pop_back();
+			digits_.pop_back();
+		}
+		if (digits_.empty())
+		{
+			nullify();
 		}
 	}
 
 	void natural::nullify() & noexcept
 	{
-		if (num_.size() != 1)
+		if (digits_.size() != 1)
 		{
-			num_.resize(1);
+			digits_.resize(1);
 		}
 
-		num_[0] = 0;
+		digits_[0] = 0;
 	}
 
 	bool natural::is_zero() const & noexcept
 	{
-		return num_.size() == 1 && num_.front() == 0;
+		return digits_.size() == 1 && digits_.front() == 0;
 	}
 
 	// TODO function is fast but not efficient (many copies)
@@ -315,14 +308,14 @@ namespace big
 
 		natural quotient;
 		natural remainder;
-		uint8_t count;
+		cell_type count;
 
-		for (auto it: std::ranges::reverse_view(num_))
+		for (const auto &digit: digits_ | std::views::reverse)
 		{
 			count = 0;
 
 			remainder <<= 1;
-			remainder += it;
+			remainder += digit;
 
 			while (remainder >= divisor)
 			{
@@ -347,9 +340,9 @@ namespace big
 	{
 		std::ostringstream ss;
 
-		for (const auto &it: std::ranges::reverse_view(num_))
+		for (const auto &digit: digits_ | std::views::reverse)
 		{
-			ss << static_cast<int16_t>(it);
+			ss << digit;
 		}
 
 		return ss.str();
@@ -371,14 +364,16 @@ namespace big
 			digits_.push_back(digit);
 		}
 
-		if (digits_[position] > numeral_system_base - digit)
+		if (digits_[position] >= numeral_system_base - digit)
 		{
 			digit -= numeral_system_base - digits_[position];
-			digits_[position] = 0;
+			digits_[position] = digit;
 			add_digit(1, position + 1);
 		}
-
-		digits_[position] += digit;
+		else
+		{
+			digits_[position] += digit;
+		}
 	}
 
 	void natural::subtract_digit(natural::cell_type digit, std::size_t position)

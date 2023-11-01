@@ -6,7 +6,7 @@ TEST(NaturalTestSuite, TestComparison)
 {
 	using namespace big;
 
-	//EXPECT_TRUE(natural("lpplpPP") == natural("0"));
+	EXPECT_TRUE(natural("lpplpPP") == natural("0"));
 	EXPECT_TRUE(natural("1100") != natural("10001"));
 	EXPECT_TRUE(natural("555") == natural("555"));
 	EXPECT_FALSE(natural("555") < natural("555"));
@@ -27,10 +27,10 @@ TEST(NaturalTestSuite, TestPlus)
 
 	EXPECT_EQ(a.to_str(), "0");
 
-	a += natural(3);
+	a += 3;
 	EXPECT_EQ(a.to_str(), "3");
 	a <<= 1;
-	EXPECT_EQ(a.to_str(), "30");
+	EXPECT_EQ(a.to_str(), "12884901885");
 	a += natural(10);
 	EXPECT_EQ(a.to_str(), "40");
 	a += natural(7);

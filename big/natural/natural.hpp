@@ -9,9 +9,10 @@ namespace big
 {
 	class natural {
 	public:
-		using cell_type = std::uintmax_t;
+		using cell_type = std::uint32_t;
+		using size_type = std::size_t;
 		using num_representation = std::vector<cell_type>;
-		static constexpr cell_type numeral_system_base = std::numeric_limits<cell_type>::max();
+		static constexpr cell_type numeral_system_base = 1'000'000'000;
 
 	private:
 		num_representation digits_;
@@ -20,12 +21,12 @@ namespace big
 
 		void nullify() & noexcept;
 
-		void add_digit(cell_type digit, std::size_t position = 0);
+		void add_digit(cell_type digit, size_type position);
 
-		// If num is less than digit then UB
-		void subtract_digit(cell_type digit, std::size_t position = 0);
+		// If num is less than digit then undefined behavior
+		void subtract_digit(cell_type digit, size_type position);
 	public:
-		natural(std::uint64_t num = 0) noexcept;
+		natural(std::uintmax_t num = 0) noexcept;
 
 		natural(const std::string &num) noexcept;
 
