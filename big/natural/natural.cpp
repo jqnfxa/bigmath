@@ -1,9 +1,9 @@
 #include <ranges>
 #include <stdexcept>
-#include <limits>
 #include <sstream>
 #include <compare>
-#include <algorithm>
+#include <cmath>
+#include <iomanip>
 #include "natural.hpp"
 
 namespace big
@@ -12,28 +12,64 @@ namespace big
 	{
 		do
 		{
-			digits_.push_back(num % numeral_system_base);
-			num /= numeral_system_base;
+			digits_.push_back(num % number_system_base);
+			num /= number_system_base;
 		} while (num != 0);
 
 		erase_leading_zeroes();
 	}
 
-	natural::natural(const std::string &num) noexcept
+	natural::natural(const std::string &num)
 	{
-		// TODO implement
+		if (num.empty())
+		{
+			throw std::invalid_argument("cannot build num from empty string");
+		}
+
+		const auto &is_not_a_decimal_digit = [](const auto &ch)
+		{
+			return !isdigit(ch);
+		};
+
+		if (std::any_of(num.begin(), num.end(), is_not_a_decimal_digit))
+		{
+			throw std::invalid_argument("invalid number, one or more characters are not a digit");
+		}
+
+		size_type offset = 0;
+		const auto &chunk_size = bits_per_num;
+		const auto &total_chunks = static_cast<size_type>(std::ceil(static_cast<double>(num.size()) / chunk_size));
+
+		auto current_chunk_size = num.size() % chunk_size;
+		if (current_chunk_size == 0)
+		{
+			current_chunk_size = chunk_size;
+		}
+
+		for (size_type i = 0; i < total_chunks; ++i)
+		{
+			auto chunk = num.substr(offset, current_chunk_size);
+
+			cell_type digit = std::strtoul(chunk.data(), reinterpret_cast<char **>(chunk.data() + chunk.size()), 10);
+			digits_.insert(digits_.begin(), digit);
+
+			offset += current_chunk_size;
+			current_chunk_size = chunk_size;
+		}
 	}
 
 	natural::natural(const num_representation &num)
 	{
-		for (auto &item: num)
+		const auto &is_invalid_digit = [&](const auto &digit)
 		{
-			if (item >= numeral_system_base)
-			{
-				throw std::invalid_argument(
-					std::to_string(item) + " cannot be represented in the " + std::to_string(numeral_system_base)
-					+ " number system");
-			}
+			return digit >= number_system_base;
+		};
+
+		if (std::any_of(num.begin(), num.end(), is_invalid_digit))
+		{
+			throw std::invalid_argument(
+				"an invalid number, one or more digits cannot be represented in the number system "
+				+ std::to_string(number_system_base));
 		}
 
 		digits_ = num;
@@ -100,11 +136,18 @@ namespace big
 
 	natural &natural::operator+=(const natural &other) & noexcept
 	{
+		// TODO handle situation a += a properly
+		if (*this == other)
+		{
+			*this *= 2;
+			return *this;
+		}
+
 		digits_.resize(std::max(digits_.size(), other.digits_.size()) + 1);
 
 		for (size_type i = 0; i < other.digits_.size(); ++i)
 		{
-			add_digit(other.digits_[i], i);
+			add_digit(digits_, other.digits_[i], i);
 		}
 
 		erase_leading_zeroes();
@@ -117,10 +160,16 @@ namespace big
 		{
 			throw std::domain_error("it is impossible to subtract a larger natural number");
 		}
-
-		for (std::size_t i = 0; i < other.digits_.size(); ++i)
+		// TODO handle situation a -= a properly
+		if (*this == other)
 		{
-			subtract_digit(other.digits_[i], i);
+			nullify();
+			return *this;
+		}
+
+		for (size_type i = 0; i < other.digits_.size(); ++i)
+		{
+			subtract_digit(digits_, other.digits_[i], i);
 		}
 
 		erase_leading_zeroes();
@@ -150,14 +199,14 @@ namespace big
 			{
 				std::uintmax_t product = digits_[i];
 				product *= other.digits_[j];
-				product += digits_[i + j];
+				product += result[i + j];
 
-				if (product >= numeral_system_base)
+				if (product >= number_system_base)
 				{
-					add_digit(product / numeral_system_base, i + j + 1);
+					add_digit(result, product / number_system_base, i + j + 1);
 				}
 
-				digits_[i + j] = product % numeral_system_base;
+				result[i + j] = product % number_system_base;
 			}
 		}
 
@@ -194,7 +243,7 @@ namespace big
 
 		digits_.resize(size + shift);
 
-		const auto rbegin = digits_.rbegin();
+		const auto &rbegin = digits_.rbegin();
 		std::copy(std::next(rbegin, shift), digits_.rend(), rbegin);
 		std::fill_n(digits_.begin(), shift, 0);
 
@@ -203,14 +252,18 @@ namespace big
 
 	natural &natural::operator>>=(std::size_t shift) & noexcept
 	{
-		if (is_zero() || shift == 0 || shift >= digits_.size())
+		if (shift == 0)
+		{
+			return *this;
+		}
+		if (is_zero() || shift >= digits_.size())
 		{
 			nullify();
 			return *this;
 		}
 
 		const auto &size = digits_.size();
-		const auto begin = digits_.begin();
+		const auto &begin = digits_.begin();
 
 		digits_.erase(begin, std::next(begin, shift));
 		digits_.resize(size - shift);
@@ -267,6 +320,91 @@ namespace big
 		return temp;
 	}
 
+	bool natural::is_zero() const & noexcept
+	{
+		return digits_.size() == 1 && digits_.front() == 0;
+	}
+
+	// TODO rework this function
+	// Complexity: O(n*(n + log2(m) * m * number_system_base)) ~ O(n^2 + n * m * log2(m)), where n = len(this), m = len(divisor)
+	std::pair<natural, natural> natural::long_div(const natural &divisor) const &
+	{
+		if (divisor.is_zero())
+		{
+			throw std::domain_error("cannot divide by zero");
+		}
+		if (*this < divisor)
+		{
+			return {0, *this};
+		}
+
+		natural quotient = 0;
+		natural remainder = 0;
+
+		for (const auto &digit: digits_ | std::views::reverse)
+		{
+			remainder <<= 1;
+			remainder += digit;
+
+			if (remainder < divisor)
+			{
+				continue;
+			}
+
+			std::uintmax_t low = 1;
+			std::uintmax_t high = number_system_base;
+
+			while (low < high)
+			{
+				std::uintmax_t mid = (low + high + 1) / 2;
+				natural temp = divisor * mid;
+
+				if (temp > remainder)
+				{
+					high = mid - 1;
+				}
+				else
+				{
+					low = mid;
+				}
+			}
+
+			quotient <<= 1;
+			quotient += low;
+
+			remainder -= divisor * low;
+		}
+
+		quotient.erase_leading_zeroes();
+		remainder.erase_leading_zeroes();
+
+		return {quotient, remainder};
+	}
+
+	std::string natural::to_str() const & noexcept
+	{
+		std::ostringstream stream;
+		stream << *this;
+		return stream.str();
+	}
+
+	std::ostream &operator<<(std::ostream &out, const natural &num)
+	{
+		const auto digits = static_cast<std::int16_t>(std::ceil(std::log10(natural::number_system_base)));
+
+		for (auto it = num.digits_.rbegin(); it != num.digits_.rend(); ++it)
+		{
+			if (it != num.digits_.rbegin())
+			{
+				out << std::setw(digits) << std::setfill('0');
+			}
+
+			out << *it;
+		}
+
+		return out;
+	}
+
 	void natural::erase_leading_zeroes() & noexcept
 	{
 		while (digits_.size() > 1 && digits_.back() == 0)
@@ -289,121 +427,65 @@ namespace big
 		digits_[0] = 0;
 	}
 
-	bool natural::is_zero() const & noexcept
+	// TODO rewrite without goto and actual recursion
+	void natural::add_digit(num_representation &num, cell_type digit, std::size_t position)
 	{
-		return digits_.size() == 1 && digits_.front() == 0;
-	}
-
-	// TODO function is fast but not efficient (many copies)
-	std::pair<natural, natural> natural::long_div(const natural &divisor) const &
-	{
-		if (divisor.is_zero())
-		{
-			throw std::domain_error("Cannot divide by zero");
-		}
-		if (*this < divisor)
-		{
-			return {0, *this};
-		}
-
-		natural quotient;
-		natural remainder;
-		cell_type count;
-
-		for (const auto &digit: digits_ | std::views::reverse)
-		{
-			count = 0;
-
-			remainder <<= 1;
-			remainder += digit;
-
-			while (remainder >= divisor)
-			{
-				remainder -= divisor;
-				++count;
-			}
-
-			if (count > 0 || quotient > 0)
-			{
-				quotient <<= 1;
-				quotient += count;
-			}
-		}
-
-		quotient.erase_leading_zeroes();
-		remainder.erase_leading_zeroes();
-
-		return {quotient, remainder};
-	}
-
-	std::string natural::to_str() const & noexcept
-	{
-		std::ostringstream ss;
-
-		for (const auto &digit: digits_ | std::views::reverse)
-		{
-			ss << digit;
-		}
-
-		return ss.str();
-	}
-
-	std::ostream &operator<<(std::ostream &out, const natural &num)
-	{
-		return out << num.to_str();
-	}
-
-	void natural::add_digit(cell_type digit, std::size_t position)
-	{
-		if (position > digits_.size())
+		if (position > num.size())
 		{
 			throw std::out_of_range(std::to_string(position) + " is out of range");
 		}
-		if (position == digits_.size())
+
+		recursion:
+		if (position == num.size())
 		{
-			digits_.push_back(digit);
+			num.push_back(digit);
+			return;
 		}
 
-		if (digits_[position] >= numeral_system_base - digit)
+		if (num[position] >= number_system_base - digit)
 		{
-			digit -= numeral_system_base - digits_[position];
-			digits_[position] = digit;
-			add_digit(1, position + 1);
+			digit -= number_system_base - num[position];
+			num[position] = digit;
+
+			digit = 1;
+			++position;
+
+			goto recursion;
 		}
 		else
 		{
-			digits_[position] += digit;
+			num[position] += digit;
 		}
 	}
 
-	void natural::subtract_digit(natural::cell_type digit, std::size_t position)
+	void natural::subtract_digit(num_representation &num, natural::cell_type digit, std::size_t position)
 	{
-		if (position >= digits_.size())
+		if (position >= num.size())
 		{
 			throw std::out_of_range(std::to_string(position) + " is out of range");
 		}
 
-		if (digits_[position] < digit)
+		if (num[position] < digit)
 		{
 			auto borrow_position = position + 1;
 
-			while (borrow_position < digits_.size() && digits_[borrow_position] == 0)
+			while (borrow_position < num.size() && num[borrow_position] == 0)
 			{
 				++borrow_position;
 			}
 
-			--digits_[borrow_position];
+			--num[borrow_position];
 
-			for (std::size_t j = borrow_position - 1; j > position; --j)
+			for (size_type j = borrow_position - 1; j > position; --j)
 			{
-				digits_[j] += numeral_system_base - 1;
+				num[j] += number_system_base - 1;
 			}
 
-			digits_[position] += numeral_system_base - digit;
+			num[position] += number_system_base - digit;
 		}
 		else
 		{
-			digits_[position] -= digit;
+			num[position] -= digit;
 		}
 	}
 }

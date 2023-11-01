@@ -2,78 +2,190 @@
 #include "../big/algorithm/algorithm.hpp"
 #include "gtest/gtest.h"
 
+TEST(NaturalTestSuite, TestConstruction)
+{
+	using namespace big;
+
+	// from integer
+	ASSERT_EQ(natural(1).to_str(), "1");
+	ASSERT_EQ(natural(572275).to_str(), "572275");
+	ASSERT_EQ(natural(1000000007).to_str(), "1000000007");
+	ASSERT_EQ(natural(1000000000).to_str(), "1000000000");
+	ASSERT_EQ(natural(18446744073709551615ull).to_str(), "18446744073709551615");
+
+	// from string
+	ASSERT_EQ(natural("0").to_str(), "0");
+	ASSERT_EQ(natural("1").to_str(), "1");
+	ASSERT_EQ(natural("57").to_str(), "57");
+	ASSERT_EQ(natural("57558858585858").to_str(), "57558858585858");
+	ASSERT_EQ(natural("5464841321654684321354687465132146874651354984651354687465432135468798465132165487654321654798462168465468324792").to_str(), "5464841321654684321354687465132146874651354984651354687465432135468798465132165487654321654798462168465468324792");
+	ASSERT_EQ(natural("999911205").to_str(), "999911205");
+
+	// exceptions
+	{
+		try
+		{
+			natural a("");
+			FAIL();
+		}
+		catch (const std::invalid_argument &e)
+		{
+			EXPECT_EQ(e.what(), std::string("cannot build num from empty string"));
+		}
+		catch (...)
+		{
+			EXPECT_FALSE("unknown exception");
+		}
+	}
+	{
+		try
+		{
+			natural a("55 6");
+			FAIL();
+		}
+		catch (const std::invalid_argument &e)
+		{
+			EXPECT_EQ(e.what(), std::string("invalid number, one or more characters are not a digit"));
+		}
+		catch (...)
+		{
+			EXPECT_FALSE("unknown exception");
+		}
+	}
+	{
+		try
+		{
+			natural a("-556");
+			FAIL();
+		}
+		catch (const std::invalid_argument &e)
+		{
+			EXPECT_EQ(e.what(), std::string("invalid number, one or more characters are not a digit"));
+		}
+		catch (...)
+		{
+			EXPECT_FALSE("unknown exception");
+		}
+	}
+	{
+		try
+		{
+			natural a("54738461283746127364686712348723f56");
+			FAIL();
+		}
+		catch (const std::invalid_argument &e)
+		{
+			EXPECT_EQ(e.what(), std::string("invalid number, one or more characters are not a digit"));
+		}
+		catch (...)
+		{
+			EXPECT_FALSE("unknown exception");
+		}
+	}
+}
+
 TEST(NaturalTestSuite, TestComparison)
 {
 	using namespace big;
 
-	EXPECT_TRUE(natural("lpplpPP") == natural("0"));
-	EXPECT_TRUE(natural("1100") != natural("10001"));
-	EXPECT_TRUE(natural("555") == natural("555"));
-	EXPECT_FALSE(natural("555") < natural("555"));
-	EXPECT_TRUE(natural("555") <= natural("555"));
-	EXPECT_TRUE(natural("555") < natural("556"));
-	EXPECT_TRUE(natural("555") < natural("1555"));
-	EXPECT_TRUE(natural("555857857877") > natural("555857857867"));
-	EXPECT_TRUE(natural("1000000000000") > natural("555857857867"));
-	EXPECT_TRUE(natural("1000000000000") >= natural("555857857867"));
-	EXPECT_TRUE(natural("1000000000000") >= natural("1000000000000"));
+	ASSERT_TRUE(natural("1100") != natural("10001"));
+	ASSERT_TRUE(natural("555") == natural("555"));
+	ASSERT_FALSE(natural("555") < natural("555"));
+	ASSERT_TRUE(natural("555") <= natural("555"));
+	ASSERT_TRUE(natural("555") < natural("556"));
+	ASSERT_TRUE(natural("555") < natural("1555"));
+	ASSERT_TRUE(natural("555857857877") > natural("555857857867"));
+	ASSERT_TRUE(natural("1000000000000") > natural("555857857867"));
+	ASSERT_TRUE(natural("1000000000000") >= natural("555857857867"));
+	ASSERT_TRUE(natural("1000000000000") >= natural("1000000000000"));
 }
 
 TEST(NaturalTestSuite, TestPlus)
 {
 	using namespace big;
 
-	natural a(0);
+	{
+		natural num(8589934586);
+		ASSERT_EQ(num.to_str(), "8589934586");
+		num += num;
+		ASSERT_EQ(num.to_str(), "17179869172");
+	}
+	{
 
-	EXPECT_EQ(a.to_str(), "0");
+		natural a(0);
 
-	a += 3;
-	EXPECT_EQ(a.to_str(), "3");
-	a <<= 1;
-	EXPECT_EQ(a.to_str(), "12884901885");
-	a += natural(10);
-	EXPECT_EQ(a.to_str(), "40");
-	a += natural(7);
-	EXPECT_EQ(a.to_str(), "47");
-	a += natural(99999999999);
-	EXPECT_EQ(a.to_str(), "100000000046");
-	a >>= 2;
-	EXPECT_EQ(a.to_str(), "1000000000");
+		ASSERT_EQ(a.to_str(), "0");
+		a += 3;
+		ASSERT_EQ(a.to_str(), "3");
+		a <<= 1;
+		ASSERT_EQ(a.to_str(), "3000000000");
+		a += 10;
+		ASSERT_EQ(a.to_str(), "3000000010");
+		a += 7;
+		ASSERT_EQ(a.to_str(), "3000000017");
+		a += 99999999999;
+		ASSERT_EQ(a.to_str(), "103000000016");
+		a >>= 1;
+		ASSERT_EQ(a.to_str(), "103");
+		a += natural("5464841321654684321354687465132146874651354984651354687465432135468798465132165487654321654798462168465468324689");
+		ASSERT_EQ(a.to_str(), "5464841321654684321354687465132146874651354984651354687465432135468798465132165487654321654798462168465468324792");
+		a += a;
+		ASSERT_EQ(a.to_str(), "10929682643309368642709374930264293749302709969302709374930864270937596930264330975308643309596924336930936649584");
+		a *= 0;
+		ASSERT_EQ(a.to_str(), "0");
+		a += 1e9 + 7;
+		ASSERT_EQ(a.to_str(), "1000000007");
+	}
 }
 
 TEST(NaturalTestSuite, TestMinus)
 {
 	using namespace big;
 
-	natural a(1000000000);
-
-	a -= natural(999911205);
-
-	EXPECT_EQ(a.to_str(), "88795");
-
-	a -= natural();
-
-	EXPECT_EQ(a.to_str(), "88795");
-
-	a -= natural(88789);
-
-	EXPECT_EQ(a.to_str(), "6");
-
-	a -= natural(5);
-
-	EXPECT_EQ(a.to_str(), "1");
-
-	--a;
-
-	EXPECT_EQ(a.to_str(), "0");
-
-	try
 	{
-		natural("1") - natural("2");
+		natural num(8589934586);
+		ASSERT_EQ(num.to_str(), "8589934586");
+		num -= num;
+		ASSERT_EQ(num.to_str(), "0");
 	}
-	catch (const std::domain_error &e)
 	{
-		EXPECT_EQ(e.what(), std::string("Unable to subtract the greater natural"));
+
+		natural a(103000000016);
+
+		ASSERT_EQ(a.to_str(), "103000000016");
+		--a;
+		ASSERT_EQ(a.to_str(), "103000000015");
+		a -= 150000;
+		ASSERT_EQ(a.to_str(), "102999850015");
+		a -= 7998500096;
+		ASSERT_EQ(a.to_str(), "95001349919");
+	}
+	{
+		natural a("41238749812376498394761293846981237649812736481726308412341234");
+
+		ASSERT_EQ(a.to_str(), "41238749812376498394761293846981237649812736481726308412341234");
+		a -= natural("98123764983947612938469812376498127364817263468465");
+		ASSERT_EQ(a.to_str(), "41238749812278374629777346234042767837436238354361491148872769");
+	}
+	{
+		try
+		{
+			natural a(15);
+			natural b(16);
+
+			a = a - b;
+			--b;
+			a += b;
+			a -= b;
+		}
+		catch (const std::domain_error &e)
+		{
+			EXPECT_EQ(e.what(), std::string("it is impossible to subtract a larger natural number"));
+		}
+		catch (...)
+		{
+			EXPECT_FALSE("unknown exception");
+		}
 	}
 }
 
@@ -83,58 +195,54 @@ TEST(NaturalTestSuite, TestProduct)
 
 	natural a("999911205");
 
-	EXPECT_EQ(a.to_str(), "999911205");
+	ASSERT_EQ(a.to_str(), "999911205");
 
 	a *= natural("554654684");
 
-	EXPECT_EQ(a.to_str(), "554605433437334220");
+	ASSERT_EQ(a.to_str(), "554605433437334220");
 
-	a *= natural(1);
+	a *= 1;
 
-	EXPECT_EQ(a.to_str(), "554605433437334220");
+	ASSERT_EQ(a.to_str(), "554605433437334220");
 
-	a *= natural(0);
+	a *= 0;
 
-	EXPECT_EQ(a.to_str(), "0");
+	ASSERT_EQ(a.to_str(), "0");
 
-	a += natural(554605433437);
+	a += 554605433437;
 
-	EXPECT_EQ(a.to_str(), "554605433437");
+	ASSERT_EQ(a.to_str(), "554605433437");
 
-	a *= natural(554605433437);
+	a *= 554605433437;
 	a *= a;
 	a *= a;
 
-	EXPECT_EQ(a.to_str(), "8951028917198964712757504215998227867810191445839800441149608111417415741073044384885876111521");
+	ASSERT_EQ(a.to_str(), "8951028917198964712757504215998227867810191445839800441149608111417415741073044384885876111521");
 }
 
 TEST(NaturalTestSuite, TestBitwiseLeftShift)
 {
 	using namespace big;
 
-	natural a("554605433437334220");
+	std::string initial = "554605433437334220";
+
+	natural a(initial);
 
 	a <<= 15;
 
-	EXPECT_EQ(a.to_str(), "554605433437334220000000000000000");
+	initial += std::string(9 * 15, '0');
 
-	std::string old = a.to_str();
-
-	old += std::string(1500000, '0');
-
-	a <<= 1500000;
-
-	EXPECT_EQ(a.to_str(), old);
-
-	a <<= 1500000;
-
-	old += std::string(1500000, '0');
-
-	EXPECT_EQ(a.to_str(), old);
+	ASSERT_EQ(a.to_str(), initial);
 
 	a <<= 0;
 
-	EXPECT_EQ(a.to_str(), old);
+	ASSERT_EQ(a.to_str(), initial);
+
+	a <<= 1500000;
+
+	initial += std::string(9 * 1500000, '0');
+
+	ASSERT_EQ(a.to_str(), initial);
 }
 
 TEST(NaturalTestSuite, TestBitwiseRightShift)
@@ -147,34 +255,34 @@ TEST(NaturalTestSuite, TestBitwiseRightShift)
 
 	a >>= 0;
 
-	EXPECT_EQ(a.to_str(), old);
+	ASSERT_EQ(a.to_str(), old);
 
-	old.resize(old.size() - 14);
+	old = old.substr(0, 9);
 
-	a >>= 14;
+	a >>= 1;
 
-	EXPECT_EQ(a.to_str(), old);
+	ASSERT_EQ(a.to_str(), old);
 
 	a >>= 7;
 
-	EXPECT_EQ(a.to_str(), "0");
+	ASSERT_EQ(a.to_str(), "0");
 }
 
 TEST(NaturalTestSuite, TestDivision)
 {
 	using namespace big;
 
-	EXPECT_EQ(natural("42").long_div(natural("7")).first, natural("6"));
-	EXPECT_EQ(natural("42").long_div(natural("7")).second, natural("0"));
+	ASSERT_EQ(natural("42").long_div(natural("7")).first, natural("6"));
+	ASSERT_EQ(natural("42").long_div(natural("7")).second, natural("0"));
 
-	EXPECT_EQ(natural("56885154").long_div(natural("7")).first, natural("8126450"));
-	EXPECT_EQ(natural("56885154").long_div(natural("7")).second, natural("4"));
+	ASSERT_EQ(natural("56885154").long_div(natural("7")).first, natural("8126450"));
+	ASSERT_EQ(natural("56885154").long_div(natural("7")).second, natural("4"));
 
-	EXPECT_EQ(natural("56885154").long_div(natural("9954984651")).first, natural("0"));
-	EXPECT_EQ(natural("56885154").long_div(natural("9954984651")).second, natural("56885154"));
+	ASSERT_EQ(natural("56885154").long_div(natural("9954984651")).first, natural("0"));
+	ASSERT_EQ(natural("56885154").long_div(natural("9954984651")).second, natural("56885154"));
 
-	EXPECT_EQ(natural("84587134587163498576983174658973649875628374817239847162938461283746737621384921763984612837469823764987").long_div(natural("2")).first, natural("42293567293581749288491587329486824937814187408619923581469230641873368810692460881992306418734911882493"));
-	EXPECT_EQ(natural("84587134587163498576983174658973649875628374817239847162938461283746737621384921763984612837469823764987").long_div(natural("2")).second, natural("1"));
+	ASSERT_EQ(natural("84587134587163498576983174658973649875628374817239847162938461283746737621384921763984612837469823764987").long_div(natural("2")).first, natural("42293567293581749288491587329486824937814187408619923581469230641873368810692460881992306418734911882493"));
+	ASSERT_EQ(natural("84587134587163498576983174658973649875628374817239847162938461283746737621384921763984612837469823764987").long_div(natural("2")).second, natural("1"));
 
 	std::string very_large = "84587134587163498576983174658973649875628374817239847162938461283746737621384921763984612837469823764987348136498172639846192837649387162398463981273649823948738649369812763948712639846739756483748912736947126398461273649712346936498276398";
 	std::string divisor = "431289124387461298346192837";
@@ -182,16 +290,21 @@ TEST(NaturalTestSuite, TestDivision)
 	std::string remainder = "277023148385491500673702101";
 
 	auto ret = natural(very_large).long_div(natural(divisor));
-	EXPECT_EQ(ret.first.to_str(), quotient);
-	EXPECT_EQ(ret.second.to_str(), remainder);
+	ASSERT_EQ(ret.first.to_str(), quotient);
+	ASSERT_EQ(ret.second.to_str(), remainder);
 
 	natural num(very_large);
 
-	num <<= 135;
-	num *= num;
+	num <<= 17;
 
-	EXPECT_EQ((num
-			   / natural(divisor)).to_str(), "16589760634072982601598520990767007822486366031367668643748451473469680852342754074368303333454281540413703962441843788126425597574131364741253047276626556264855769857882493686709012911189329624723299799927347321062828898577177385023842335657566400810794362469978716317611594605697246549479252503491640377452404768088516464715159554085409133663279299851442314425945275780836071221670870234065894007842746561021631634608091164680951943504416901881885720475066136388214293300796818833427667373259162310629933432983391108750072158732127782487797514015741018297318003687991841386346818555789929453008257024946059792201007621599405550030758917947018587114844138613678175246619009352025844341439312335204191479892501702655679226");
+	ASSERT_EQ((num
+			   / natural(divisor)).to_str(), "196126286994364719427352371814946481139567206978944028924245223561914598598342572620318055970420645044007842319309020510965457372840772412270676823713153740039602065340067348480364188933227621073696228858028328581642314245180501211270540331561880337515765283242188812515809136679792656415975503700621773860312954111030218228391060091874645009574680934122993774116829");
+
+	natural k = num;
+
+	num <<= 150000;
+
+	num /= k;
 
 	try
 	{
@@ -199,7 +312,7 @@ TEST(NaturalTestSuite, TestDivision)
 	}
 	catch (const std::domain_error &e)
 	{
-		EXPECT_EQ(e.what(), std::string("Cannot divide by zero"));
+		EXPECT_EQ(e.what(), std::string("cannot divide by zero"));
 	}
 }
 
@@ -218,9 +331,9 @@ TEST(NaturalTestSuite, TestModule)
 	}
 
 	// 29 ^ 183 % 73 == 66
-	EXPECT_EQ(base % natural(73), natural("66"));
+	ASSERT_EQ(base % natural(73), natural("66"));
 
-	EXPECT_EQ((base * base * base) % natural("154654846"), natural("6396741"));
+	ASSERT_EQ((base * base * base) % natural("154654846"), natural("6396741"));
 
 	try
 	{
@@ -228,8 +341,8 @@ TEST(NaturalTestSuite, TestModule)
 	}
 	catch (const std::domain_error &e)
 	{
-		EXPECT_EQ(e.what(), std::string("Cannot divide by zero"));
+		EXPECT_EQ(e.what(), std::string("cannot divide by zero"));
 	}
 
-	EXPECT_EQ(natural("42") % natural("6"), natural("0"));
+	ASSERT_EQ(natural("42") % natural("6"), natural("0"));
 }
