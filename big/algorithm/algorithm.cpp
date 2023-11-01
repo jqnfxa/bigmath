@@ -18,7 +18,7 @@ namespace big
 			first = std::exchange(second, first % second);
 		}
 
-		if ((a % first).major_coefficient() == rational(0, 1) && (b % first).major_coefficient() == rational(0, 1))
+		if ((a % first).major_coefficient() == rational(0) && (b % first).major_coefficient() == rational(0))
 		{
 			return first;
 		}
@@ -46,7 +46,9 @@ namespace big
 
 	natural lcm(const natural &a, const natural &b)
 	{
-		return a * b / gcd(a, b);
+		natural result = std::move(a * b);
+		result /= gcd(a, b);
+		return result;
 	}
 
 	rational pow(rational num, integer base)
@@ -54,20 +56,19 @@ namespace big
 		if (base < 0)
 		{
 			base.flip_sing();
-			return rational(1, 1) / pow(num, base);
+			return rational(1) / pow(num, base);
 		}
-		if (num.numerator().abs() == 1)
+		if (num.numerator().abs() == 1u)
 		{
-			if (base.abs().is_even() == 0 && num.numerator() < 0 || !base.abs().is_even() && num.numerator() > 0)
+			if (num.numerator() < 0 && base.abs().is_even())
 			{
-				num *= {-1, 1};
+				num *= -1;
 			}
 
 			return num;
 		}
 
-		rational result(1, 1);
-		integer zero(0);
+		rational result(1);
 
 		while (base > 0)
 		{

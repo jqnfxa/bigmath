@@ -5,6 +5,13 @@
 namespace big
 {
 	class rational;
+	class integer;
+
+	template <typename T>
+	concept signed_type = std::signed_integral<T>;
+
+	template <typename T>
+	concept integer_type = std::is_same_v<T, integer> || std::is_same_v<T, natural>;
 
 	class integer {
 		bool sign_bit_;
@@ -13,11 +20,15 @@ namespace big
 		void normalize() & noexcept;
 
 	public:
-		integer(std::intmax_t num = 0) noexcept;
+		// TODO std::abs will cause overflow when num == type::min?
+		template <signed_type type>
+		integer(type num = 0) noexcept : sign_bit_(num < 0), abs_(static_cast<std::uintmax_t>(std::abs(num)))
+		{
+		}
 
-		explicit integer(const natural &natural, bool is_negative = false) noexcept;
+		integer(const natural &natural, bool is_negative = false) noexcept;
 
-		explicit integer(natural &&natural, bool is_negative = false) noexcept;
+		integer(natural &&natural, bool is_negative = false) noexcept;
 
 		explicit integer(const rational &other) noexcept;
 
@@ -65,21 +76,37 @@ namespace big
 
 		integer &operator>>=(std::size_t shift) & noexcept;
 
-		integer operator+(const integer &other) const & noexcept;
+		template <integer_type type>
+		integer operator+(const type &other) const & noexcept
+		{
+			integer temp(*this);
+			temp += other;
+			return temp;
+		}
 
-		integer operator+(const natural &other) const & noexcept;
+		template <integer_type type>
+		integer operator-(const type &other) const &
+		{
+			integer temp(*this);
+			temp -= other;
+			return temp;
+		}
 
-		integer operator-(const integer &other) const &;
+		template <integer_type type>
+		integer operator*(const type &other) const & noexcept
+		{
+			integer temp(*this);
+			temp *= other;
+			return temp;
+		}
 
-		integer operator-(const natural &other) const &;
-
-		integer operator*(const integer &other) const & noexcept;
-
-		integer operator*(const natural &other) const & noexcept;
-
-		integer operator/(const integer &other) const &;
-
-		integer operator/(const natural &other) const &;
+		template <integer_type type>
+		integer operator/(const type &other) const &
+		{
+			integer temp(*this);
+			temp /= other;
+			return temp;
+		}
 
 		integer operator%(const integer &other) const &;
 

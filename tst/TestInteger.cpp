@@ -52,24 +52,24 @@ TEST(IntegerTestSuite, TestProduct)
 
 	ASSERT_EQ(a.to_str(), "999911205");
 
-	a *= natural(554654684);
+	a *= 554654684;
 
 	ASSERT_EQ(a.to_str(), "554605433437334220");
 
-	a *= natural(1);
+	a *= 1;
 
 	ASSERT_EQ(a.to_str(), "554605433437334220");
 
-	a *= integer(-1);
+	a *= -1;
 
 	ASSERT_EQ(a.to_str(), "-554605433437334220");
 
-	a *= natural(0);
+	a *= 0;
 
 	ASSERT_EQ(a.to_str(), "0");
 
-	a += natural(19999);
-	a *= integer(-55);
+	a += 19999;
+	a *= -55;
 
 	ASSERT_EQ(a.to_str(), "-1099945");
 
@@ -88,7 +88,7 @@ TEST(IntegerTestSuite, TestBitwiseLeftShift)
 
 	ASSERT_EQ(a.to_str(), "554605433437334220000000000");
 
-	a *= integer(-1);
+	a *= -1;
 
 	ASSERT_EQ(a.to_str(), "-554605433437334220000000000");
 
@@ -127,7 +127,7 @@ TEST(IntegerTestSuite, TestBitwiseRightShift)
 
 	ASSERT_EQ(a.to_str(), old);
 
-	a *= integer(-1);
+	a *= -1;
 
 	ASSERT_EQ(a.to_str(), old.substr(1));
 
@@ -197,21 +197,21 @@ TEST(IntegerTestSuite, TestConstruct)
 	using namespace big;
 
 	{
-		rational b(16, 5);
+		rational b(16, 5u);
 		integer a(b);
 
 		ASSERT_EQ(a.to_str(), "3");
 		ASSERT_EQ(a, 3);
 	}
 	{
-		rational b(-165477446, 5395);
+		rational b(-165477446, 5395u);
 		integer a(b);
 
 		ASSERT_EQ(a.to_str(), "-30672");
 		ASSERT_EQ(a, integer(-30672));
 	}
 	{
-		rational b(-1654, 5395);
+		rational b(-1654, 5395u);
 		integer a(b);
 
 		ASSERT_EQ(a.to_str(), "0");

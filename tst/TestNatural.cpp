@@ -7,10 +7,10 @@ TEST(NaturalTestSuite, TestConstruction)
 	using namespace big;
 
 	// from integer
-	ASSERT_EQ(natural(1).to_str(), "1");
-	ASSERT_EQ(natural(572275).to_str(), "572275");
-	ASSERT_EQ(natural(1000000007).to_str(), "1000000007");
-	ASSERT_EQ(natural(1000000000).to_str(), "1000000000");
+	ASSERT_EQ(natural(1u).to_str(), "1");
+	ASSERT_EQ(natural(572275u).to_str(), "572275");
+	ASSERT_EQ(natural(1000000007u).to_str(), "1000000007");
+	ASSERT_EQ(natural(1000000000u).to_str(), "1000000000");
 	ASSERT_EQ(natural(18446744073709551615ull).to_str(), "18446744073709551615");
 
 	// from string
@@ -105,25 +105,25 @@ TEST(NaturalTestSuite, TestPlus)
 	using namespace big;
 
 	{
-		natural num(8589934586);
+		natural num(8589934586u);
 		ASSERT_EQ(num.to_str(), "8589934586");
 		num += num;
 		ASSERT_EQ(num.to_str(), "17179869172");
 	}
 	{
 
-		natural a(0);
+		natural a(0u);
 
 		ASSERT_EQ(a.to_str(), "0");
-		a += 3;
+		a += 3u;
 		ASSERT_EQ(a.to_str(), "3");
-		a <<= 1;
+		a <<= 1u;
 		ASSERT_EQ(a.to_str(), "3000000000");
-		a += 10;
+		a += 10u;
 		ASSERT_EQ(a.to_str(), "3000000010");
-		a += 7;
+		a += 7u;
 		ASSERT_EQ(a.to_str(), "3000000017");
-		a += 99999999999;
+		a += 99999999999u;
 		ASSERT_EQ(a.to_str(), "103000000016");
 		a >>= 1;
 		ASSERT_EQ(a.to_str(), "103");
@@ -131,9 +131,9 @@ TEST(NaturalTestSuite, TestPlus)
 		ASSERT_EQ(a.to_str(), "5464841321654684321354687465132146874651354984651354687465432135468798465132165487654321654798462168465468324792");
 		a += a;
 		ASSERT_EQ(a.to_str(), "10929682643309368642709374930264293749302709969302709374930864270937596930264330975308643309596924336930936649584");
-		a *= 0;
+		a *= 0u;
 		ASSERT_EQ(a.to_str(), "0");
-		a += 1e9 + 7;
+		a += static_cast<uint32_t>(1e9 + 7);
 		ASSERT_EQ(a.to_str(), "1000000007");
 	}
 }
@@ -143,21 +143,21 @@ TEST(NaturalTestSuite, TestMinus)
 	using namespace big;
 
 	{
-		natural num(8589934586);
+		natural num(8589934586u);
 		ASSERT_EQ(num.to_str(), "8589934586");
 		num -= num;
 		ASSERT_EQ(num.to_str(), "0");
 	}
 	{
 
-		natural a(103000000016);
+		natural a(103000000016u);
 
 		ASSERT_EQ(a.to_str(), "103000000016");
 		--a;
 		ASSERT_EQ(a.to_str(), "103000000015");
-		a -= 150000;
+		a -= 150000u;
 		ASSERT_EQ(a.to_str(), "102999850015");
-		a -= 7998500096;
+		a -= 7998500096u;
 		ASSERT_EQ(a.to_str(), "95001349919");
 	}
 	{
@@ -170,8 +170,8 @@ TEST(NaturalTestSuite, TestMinus)
 	{
 		try
 		{
-			natural a(15);
-			natural b(16);
+			natural a(15u);
+			natural b(16u);
 
 			a = a - b;
 			--b;
@@ -201,19 +201,19 @@ TEST(NaturalTestSuite, TestProduct)
 
 	ASSERT_EQ(a.to_str(), "554605433437334220");
 
-	a *= 1;
+	a *= 1u;
 
 	ASSERT_EQ(a.to_str(), "554605433437334220");
 
-	a *= 0;
+	a *= 0u;
 
 	ASSERT_EQ(a.to_str(), "0");
 
-	a += 554605433437;
+	a += 554605433437u;
 
 	ASSERT_EQ(a.to_str(), "554605433437");
 
-	a *= 554605433437;
+	a *= 554605433437u;
 	a *= a;
 	a *= a;
 
@@ -331,7 +331,7 @@ TEST(NaturalTestSuite, TestModule)
 	}
 
 	// 29 ^ 183 % 73 == 66
-	ASSERT_EQ(base % natural(73), natural("66"));
+	ASSERT_EQ(base % natural(73u), natural("66"));
 
 	ASSERT_EQ((base * base * base) % natural("154654846"), natural("6396741"));
 

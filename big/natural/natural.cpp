@@ -8,17 +8,6 @@
 
 namespace big
 {
-	natural::natural(std::uintmax_t num) noexcept
-	{
-		do
-		{
-			digits_.push_back(num % number_system_base);
-			num /= number_system_base;
-		} while (num != 0);
-
-		erase_leading_zeroes();
-	}
-
 	natural::natural(const std::string &num)
 	{
 		if (num.empty())
@@ -105,12 +94,12 @@ namespace big
 
 	bool natural::is_even() const & noexcept
 	{
-		return digits_[0] & 1;
+		return (digits_[0] & 1) == 0;
 	}
 
 	natural &natural::operator++() & noexcept
 	{
-		*this += 1;
+		*this += 1u;
 		return *this;
 	}
 
@@ -121,13 +110,13 @@ namespace big
 		return temp;
 	}
 
-	natural &natural::operator--() & noexcept
+	natural &natural::operator--() &
 	{
-		*this -= 1;
+		*this -= 1u;
 		return *this;
 	}
 
-	natural natural::operator--(int) const & noexcept
+	natural natural::operator--(int) const &
 	{
 		natural temp(*this);
 		--(temp);
@@ -139,7 +128,7 @@ namespace big
 		// TODO handle situation a += a properly
 		if (*this == other)
 		{
-			*this *= 2;
+			*this *= 2u;
 			return *this;
 		}
 
@@ -183,7 +172,7 @@ namespace big
 			nullify();
 			return *this;
 		}
-		if (other == 1)
+		if (other == 1u)
 		{
 			return *this;
 		}
@@ -335,11 +324,11 @@ namespace big
 		}
 		if (*this < divisor)
 		{
-			return {0, *this};
+			return {0u, *this};
 		}
 
-		natural quotient = 0;
-		natural remainder = 0;
+		natural quotient = 0u;
+		natural remainder = 0u;
 
 		for (const auto &digit: digits_ | std::views::reverse)
 		{
@@ -388,7 +377,7 @@ namespace big
 		return stream.str();
 	}
 
-	std::ostream &operator<<(std::ostream &out, const natural &num)
+	std::ostream &operator<<(std::ostream &out, const natural &num) noexcept
 	{
 		const auto digits = static_cast<std::int16_t>(std::ceil(std::log10(natural::number_system_base)));
 

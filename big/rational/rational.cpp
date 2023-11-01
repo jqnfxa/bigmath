@@ -3,15 +3,7 @@
 
 namespace big
 {
-	rational::rational() : rational(0, 1)
-	{
-	}
-
-	rational::rational(const integer &num) noexcept: numerator_(num), denominator_(1)
-	{
-	}
-
-	rational::rational(integer &&num) noexcept: numerator_(std::move(num)), denominator_(1)
+	rational::rational() : rational(0)
 	{
 	}
 
@@ -23,21 +15,20 @@ namespace big
 			throw std::invalid_argument("It is impossible to represent a fraction with denominator 0");
 		}
 
-		// Normalize fraction
-		reduce();
+		simplify_fraction();
 	}
 
-	void rational::reduce() & noexcept
+	void rational::simplify_fraction() & noexcept
 	{
-		auto coefficient = gcd(numerator_.abs(), denominator_);
-		numerator_ /= integer(coefficient);
+		auto coefficient = std::move(gcd(numerator_.abs(), denominator_));
+		numerator_ /= coefficient;
 		denominator_ /= coefficient;
 	}
 
 	bool rational::is_integer() const & noexcept
 	{
-		// We must guarantee that function will call after reduce
-		return denominator_ == 1;
+		// We must guarantee that function will call after simplify_fraction
+		return denominator_ == 1u;
 	}
 
 	const integer &rational::numerator() const & noexcept
@@ -57,16 +48,14 @@ namespace big
 			throw std::logic_error("There is no multiplication inverse for zero");
 		}
 
-		return rational{integer(denominator_, !numerator_.is_positive()), numerator_.abs()};
+		return rational(integer(denominator_, numerator_.sign_bit()), numerator_.abs());
 	}
 
 	rational &rational::operator+=(const rational &other) & noexcept
 	{
 		numerator_ = std::move(numerator_ * integer(other.denominator_) + integer(denominator_) * other.numerator_);
 		denominator_ *= other.denominator_;
-
-		// Normalize fraction
-		reduce();
+		simplify_fraction();
 
 		return *this;
 	}
@@ -85,9 +74,26 @@ namespace big
 	{
 		numerator_ *= other.numerator_;
 		denominator_ *= other.denominator_;
+		simplify_fraction();
 
-		// Normalize fraction
-		reduce();
+		return *this;
+	}
+
+	rational &rational::operator*=(const integer &other) & noexcept
+	{
+		if (other.sign_bit())
+		{
+			numerator_.flip_sing();
+		}
+
+		*this *= other.abs();
+		return *this;
+	}
+
+	rational &rational::operator*=(const natural &other) & noexcept
+	{
+		numerator_ *= other;
+		simplify_fraction();
 
 		return *this;
 	}
@@ -95,6 +101,25 @@ namespace big
 	rational &rational::operator/=(const rational &other) &
 	{
 		*this *= other.inverse();
+		return *this;
+	}
+
+	rational &rational::operator/=(const integer &other) &
+	{
+		if (other.sign_bit())
+		{
+			numerator_.flip_sing();
+		}
+
+		*this *= other.abs();
+		return *this;
+	}
+
+	rational &rational::operator/=(const natural &other) &
+	{
+		denominator_ *= other;
+		simplify_fraction();
+
 		return *this;
 	}
 
@@ -109,20 +134,6 @@ namespace big
 	{
 		rational temp(*this);
 		temp -= other;
-		return temp;
-	}
-
-	rational rational::operator*(const rational &other) const & noexcept
-	{
-		rational temp(*this);
-		temp *= other;
-		return temp;
-	}
-
-	rational rational::operator/(const rational &other) const &
-	{
-		rational temp(*this);
-		temp /= other;
 		return temp;
 	}
 

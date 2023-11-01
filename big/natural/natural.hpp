@@ -7,6 +7,9 @@
 
 namespace big
 {
+	template <typename T>
+	concept unsigned_type = std::unsigned_integral<T>;
+
 	class natural {
 	public:
 		using cell_type = std::uint32_t;
@@ -24,11 +27,21 @@ namespace big
 
 		void add_digit(num_representation &num, cell_type digit, size_type position);
 
-		// If num is less than digit then undefined behavior
+		// If num < digit then undefined behavior
 		void subtract_digit(num_representation &num, cell_type digit, size_type position);
 
 	public:
-		natural(std::uintmax_t num = 0) noexcept;
+		template <unsigned_type type>
+		natural(type num = 0) noexcept
+		{
+			do
+			{
+				digits_.push_back(num % number_system_base);
+				num /= number_system_base;
+			} while (num != 0);
+
+			erase_leading_zeroes();
+		}
 
 		natural(const std::string &num);
 
@@ -44,9 +57,9 @@ namespace big
 
 		natural operator++(int) const & noexcept;
 
-		natural &operator--() & noexcept;
+		natural &operator--() &;
 
-		natural operator--(int) const & noexcept;
+		natural operator--(int) const &;
 
 		natural &operator+=(const natural &other) & noexcept;
 
@@ -82,6 +95,6 @@ namespace big
 
 		[[nodiscard]] std::string to_str() const & noexcept;
 
-		friend std::ostream &operator<<(std::ostream &out, const natural &num);
+		friend std::ostream &operator<<(std::ostream &out, const natural &num) noexcept;
 	};
 }

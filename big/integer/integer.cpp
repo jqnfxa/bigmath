@@ -5,11 +5,6 @@
 
 namespace big
 {
-	// TODO std::abs will cause overflow when num == std::intmax_t::min?
-	integer::integer(std::intmax_t num) noexcept: integer(std::abs(num), num < 0)
-	{
-	}
-
 	integer::integer(const natural &natural, bool is_negative) noexcept: sign_bit_(is_negative), abs_(natural)
 	{
 	}
@@ -18,7 +13,7 @@ namespace big
 	{
 	}
 
-	integer::integer(const rational &other) noexcept
+	integer::integer(const rational &other) noexcept: integer(0)
 	{
 		*this = std::move(other.numerator() / other.denominator());
 		normalize();
@@ -67,7 +62,7 @@ namespace big
 
 	integer integer::operator-() const & noexcept
 	{
-		return integer(abs(), !sign_bit_);
+		return {abs(), !sign_bit_};
 	}
 
 	integer integer::operator+() const & noexcept
@@ -77,7 +72,7 @@ namespace big
 
 	integer &integer::operator++() & noexcept
 	{
-		*this += integer(1);
+		*this += 1;
 		return *this;
 	}
 
@@ -90,7 +85,7 @@ namespace big
 
 	integer &integer::operator--() & noexcept
 	{
-		*this -= integer(1);
+		*this -= 1;
 		return *this;
 	}
 
@@ -213,63 +208,6 @@ namespace big
 		normalize();
 
 		return *this;
-	}
-
-	// TODO think how we can merge these methods (i.e. +,-,*,/ with integer and +,-,*,/ with natural is absolutely the same)
-	integer integer::operator+(const integer &other) const & noexcept
-	{
-		integer temp(*this);
-		temp += other;
-		return temp;
-	}
-
-	integer integer::operator+(const natural &other) const & noexcept
-	{
-		integer temp(*this);
-		temp += other;
-		return temp;
-	}
-
-	integer integer::operator-(const integer &other) const &
-	{
-		integer temp(*this);
-		temp -= other;
-		return temp;
-	}
-
-	integer integer::operator-(const natural &other) const &
-	{
-		integer temp(*this);
-		temp -= other;
-		return temp;
-	}
-
-	integer integer::operator*(const integer &other) const & noexcept
-	{
-		integer temp(*this);
-		temp *= other;
-		return temp;
-	}
-
-	integer integer::operator*(const natural &other) const & noexcept
-	{
-		integer temp(*this);
-		temp *= other;
-		return temp;
-	}
-
-	integer integer::operator/(const integer &other) const &
-	{
-		integer temp(*this);
-		temp /= other;
-		return temp;
-	}
-
-	integer integer::operator/(const natural &other) const &
-	{
-		integer temp(*this);
-		temp /= other;
-		return temp;
 	}
 
 	integer integer::operator%(const integer &other) const &

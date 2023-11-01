@@ -10,6 +10,8 @@ namespace big
 		void shrink_to_fit() & noexcept;
 
 	public:
+		using size_type = std::size_t;
+
 		polynomial() noexcept;
 
 		explicit polynomial(const std::vector<rational> &coefficients) noexcept;
@@ -22,11 +24,11 @@ namespace big
 
 		[[nodiscard]] polynomial derivative() const & noexcept;
 
-		[[nodiscard]] polynomial fac() const & noexcept;
+		[[nodiscard]] polynomial normalize() const & noexcept;
 
-		void fac() & noexcept;
+		void normalize() & noexcept;
 
-		[[nodiscard]] polynomial nmr() const & noexcept;
+		[[nodiscard]] polynomial multiple_roots_to_simple() const & noexcept;
 
 		rational &at(std::size_t degree) &;
 
@@ -48,6 +50,8 @@ namespace big
 
 		polynomial &operator/=(const polynomial &other) &;
 
+		polynomial &operator/=(const rational &coefficient) &;
+
 		polynomial &operator%=(const polynomial &other) &;
 
 		polynomial operator+(const polynomial &other) const & noexcept;
@@ -61,6 +65,8 @@ namespace big
 		polynomial operator<<(std::size_t shift) const &;
 
 		polynomial operator/(const polynomial &other) const &;
+
+		polynomial operator/(const rational &coefficient) const &;
 
 		polynomial operator%(const polynomial &other) const &;
 
