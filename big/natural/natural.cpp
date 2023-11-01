@@ -3,54 +3,34 @@
 #include <limits>
 #include <sstream>
 #include <compare>
+#include <algorithm>
 #include "natural.hpp"
 
 namespace big
 {
-	// TODO use natural(std::to_string(num)) instead?
 	natural::natural(std::size_t num) noexcept
 	{
-		num_representation new_num;
-
-		do
-		{
-			new_num.push_back(num % base);
-			num /= base;
-		} while (num != 0);
-
-		num_ = std::move(new_num);
-		erase_leading_zeroes();
+		digits_.push_back(num);
 	}
 
 	natural::natural(const std::string &num) noexcept
 	{
-		num_representation new_num;
-		new_num.reserve(num.size());
-
-		for (const auto &item: std::ranges::reverse_view(num))
-		{
-			if (isdigit(item))
-			{
-				new_num.push_back(item - '0');
-			}
-		}
-
-		num_ = std::move(new_num);
-		erase_leading_zeroes();
+		// TODO implement
 	}
 
 	natural::natural(const natural::num_representation &num)
 	{
 		for (auto &item: num)
 		{
-			if (item >= base)
+			if (item >= numeral_system_base)
 			{
 				throw std::invalid_argument(
-					std::to_string(item) + " cannot be represented in " + std::to_string(base) + " system");
+					std::to_string(item) + " cannot be represented in the " + std::to_string(numeral_system_base)
+					+ " number system");
 			}
 		}
 
-		num_ = num;
+		digits_ = num;
 		erase_leading_zeroes();
 	}
 
@@ -62,23 +42,28 @@ namespace big
 
 	std::strong_ordering natural::operator<=>(const natural &other) const & noexcept
 	{
-		if (num_.size() != other.num_.size())
+		if (digits_.size() != other.digits_.size())
 		{
-			return num_.size() <=> other.num_.size();
+			return digits_.size() <=> other.digits_.size();
 		}
 
-		std::size_t order = num_.size() - 1;
+		const auto order = digits_.size() - 1;
 
 		for (std::size_t i = 0; i <= order; ++i)
 		{
-			if (num_[order - i] != other.num_[order - i])
+			if (digits_[order - i] != other.digits_[order - i])
 			{
-				return num_[order - i] <=> other.num_[order - i];
+				return digits_[order - i] <=> other.digits_[order - i];
 			}
 		}
 
 		// If all digits are equal, the numbers are equal
 		return std::strong_ordering::equal;
+	}
+
+	bool natural::is_even() const & noexcept
+	{
+		return digits_[0] % 2 == 0;
 	}
 
 	natural &natural::operator++() & noexcept
@@ -109,19 +94,12 @@ namespace big
 
 	natural &natural::operator+=(const natural &other) & noexcept
 	{
-		auto max_order = std::max(num_.size(), other.num_.size());
-		num_.resize(max_order + 1);
+		const auto max_order = std::max(digits_.size(), other.digits_.size());
+		digits_.resize(max_order + 1);
 
-		for (std::size_t i = 0; i < other.num_.size(); ++i)
+		for (std::size_t i = 0; i < other.digits_.size(); ++i)
 		{
-			num_[i] += other.num_[i];
-			num_[i + 1] += num_[i] / base;
-			num_[i] %= base;
-		}
-		for (std::size_t i = other.num_.size(); i < max_order; ++i)
-		{
-			num_[i + 1] += num_[i] / base;
-			num_[i] %= base;
+			add_digit(other.digits_[i], i);
 		}
 
 		erase_leading_zeroes();
@@ -132,43 +110,29 @@ namespace big
 	{
 		if (other > *this)
 		{
-			throw std::domain_error("Unable to subtract the greater natural");
+			throw std::domain_error("it is impossible to subtract a larger natural number");
 		}
 
-		for (std::size_t i = 0; i < other.num_.size(); ++i)
+		for (std::size_t i = 0; i < other.digits_.size(); ++i)
 		{
-			// TODO Put it in a separate method?
-			if (num_[i] < other.num_[i])
-			{
-				std::size_t borrow_position = i + 1;
-
-				while (borrow_position < num_.size() && num_[borrow_position] == 0)
-				{
-					++borrow_position;
-				}
-
-				--num_[borrow_position];
-
-				for (std::size_t j = borrow_position - 1; j > i; --j)
-				{
-					num_[j] += base - 1;
-				}
-				num_[i] += base;
-			}
-
-			num_[i] -= other.num_[i];
+			subtract_digit(other.digits_[i], i);
 		}
 
 		erase_leading_zeroes();
 		return *this;
 	}
 
+	// TODO stop here
 	natural &natural::operator*=(const natural &other) & noexcept
 	{
 		if (is_zero() || other.is_zero())
 		{
 			// TODO how to assign zero value normally?
 			nullify();
+			return *this;
+		}
+		if (other == 1)
+		{
 			return *this;
 		}
 
@@ -351,10 +315,12 @@ namespace big
 
 		natural quotient;
 		natural remainder;
-		natural count;
+		uint8_t count;
 
 		for (auto it: std::ranges::reverse_view(num_))
 		{
+			count = 0;
+
 			remainder <<= 1;
 			remainder += it;
 
@@ -364,9 +330,11 @@ namespace big
 				++count;
 			}
 
-			quotient <<= 1;
-			quotient += count;
-			count.nullify();
+			if (count > 0 || quotient > 0)
+			{
+				quotient <<= 1;
+				quotient += count;
+			}
 		}
 
 		quotient.erase_leading_zeroes();
@@ -390,5 +358,57 @@ namespace big
 	std::ostream &operator<<(std::ostream &out, const natural &num)
 	{
 		return out << num.to_str();
+	}
+
+	void natural::add_digit(cell_type digit, std::size_t position)
+	{
+		if (position > digits_.size())
+		{
+			throw std::out_of_range(std::to_string(position) + " is out of range");
+		}
+		if (position == digits_.size())
+		{
+			digits_.push_back(digit);
+		}
+
+		if (digits_[position] > numeral_system_base - digit)
+		{
+			digit -= numeral_system_base - digits_[position];
+			digits_[position] = 0;
+			add_digit(1, position + 1);
+		}
+
+		digits_[position] += digit;
+	}
+
+	void natural::subtract_digit(natural::cell_type digit, std::size_t position)
+	{
+		if (position >= digits_.size())
+		{
+			throw std::out_of_range(std::to_string(position) + " is out of range");
+		}
+
+		if (digits_[position] < digit)
+		{
+			auto borrow_position = position + 1;
+
+			while (borrow_position < digits_.size() && digits_[borrow_position] == 0)
+			{
+				++borrow_position;
+			}
+
+			--digits_[borrow_position];
+
+			for (std::size_t j = borrow_position - 1; j > position; --j)
+			{
+				digits_[j] += numeral_system_base - 1;
+			}
+
+			digits_[position] += numeral_system_base - digit;
+		}
+		else
+		{
+			digits_[position] -= digit;
+		}
 	}
 }

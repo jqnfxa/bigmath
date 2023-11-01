@@ -58,7 +58,7 @@ namespace big
 		}
 		if (num.numerator().abs() == 1)
 		{
-			if (base % 2 == 0 && num.numerator() < 0 || base % 2 != 0 && num.numerator() > 0)
+			if (base.abs().is_even() == 0 && num.numerator() < 0 || !base.abs().is_even() && num.numerator() > 0)
 			{
 				num *= {-1, 1};
 			}
@@ -67,10 +67,11 @@ namespace big
 		}
 
 		rational result(1, 1);
+		integer zero(0);
 
 		while (base > 0)
 		{
-			if (base % 2 == 0)
+			if (base.abs().is_even())
 			{
 				num *= num;
 				base /= 2;
