@@ -1,9 +1,8 @@
-#include <utility>
 #include "algorithm.hpp"
 
 namespace big
 {
-polynomial gcd(const polynomial &a, const polynomial &b)
+[[nodiscard]] polynomial gcd(const polynomial &a, const polynomial &b)
 {
 	if (a.degree() < b.degree())
 	{
@@ -26,43 +25,19 @@ polynomial gcd(const polynomial &a, const polynomial &b)
 	return second;
 }
 
-natural gcd(const natural &a, const natural &b)
-{
-	if (a < b)
-	{
-		return gcd(b, a);
-	}
-
-	natural first = a;
-	natural second = b;
-
-	while (!second.is_zero())
-	{
-		first = std::exchange(second, first % second);
-	}
-
-	return first;
-}
-
-natural lcm(const natural &a, const natural &b)
-{
-	natural result = std::move(a * b);
-	result /= gcd(a, b);
-	return result;
-}
-
-rational pow(rational num, integer base)
+[[nodiscard]] rational pow(rational num, integer base)
 {
 	if (base < 0)
 	{
-		base.flip_sing();
+		base.flip_sign();
 		return rational(1) / pow(num, base);
 	}
 	if (num.numerator().abs() == 1u)
 	{
 		if (num.numerator() < 0 && base.abs().is_even())
 		{
-			num *= -1;
+			// TODO: flip_sign
+			num *= rational(-1);
 		}
 
 		return num;

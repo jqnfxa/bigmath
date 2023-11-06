@@ -10,6 +10,7 @@ add_executable(MathModule main.cpp
 add_executable(
 	test
 	tst/main.cpp
+	big/algorithm/algorithm.cpp
 	tst/TestNatural.cpp
 	tst/TestInteger.cpp
 	big/integer/integer.cpp
