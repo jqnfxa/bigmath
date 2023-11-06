@@ -11,8 +11,9 @@ add_executable(
 	test
 	tst/main.cpp
 	tst/TestNatural.cpp
+	tst/TestInteger.cpp
+	big/integer/integer.cpp
 	big/natural/natural.cpp
-	big/natural/natural.hpp
 )
 
 find_package(GTest)
