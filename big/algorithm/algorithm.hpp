@@ -1,7 +1,7 @@
 #pragma once
 
-#include "natural/natural.hpp"
-#include "polynomial/polynomial.hpp"
+#include "../natural/natural.hpp"
+#include "../polynomial/polynomial.hpp"
 
 namespace big
 {

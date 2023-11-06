@@ -1,7 +1,7 @@
 #pragma once
 
-#include "natural/natural.hpp"
-#include "integer/integer.hpp"
+#include "../natural/natural.hpp"
+#include "../integer/integer.hpp"
 
 namespace big
 {

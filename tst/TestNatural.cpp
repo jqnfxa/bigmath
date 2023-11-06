@@ -7,19 +7,19 @@ TEST(NaturalTestSuite, TestConstruction)
 	using namespace big;
 
 	// from integer
-	ASSERT_EQ(natural(1u).to_str(), "1");
-	ASSERT_EQ(natural(572275u).to_str(), "572275");
-	ASSERT_EQ(natural(1000000007u).to_str(), "1000000007");
-	ASSERT_EQ(natural(1000000000u).to_str(), "1000000000");
-	ASSERT_EQ(natural(18446744073709551615ull).to_str(), "18446744073709551615");
+	ASSERT_EQ(natural(1u).str(), "1");
+	ASSERT_EQ(natural(572275u).str(), "572275");
+	ASSERT_EQ(natural(1000000007u).str(), "1000000007");
+	ASSERT_EQ(natural(1000000000u).str(), "1000000000");
+	ASSERT_EQ(natural(18446744073709551615ull).str(), "18446744073709551615");
 
 	// from string
-	ASSERT_EQ(natural("0").to_str(), "0");
-	ASSERT_EQ(natural("1").to_str(), "1");
-	ASSERT_EQ(natural("57").to_str(), "57");
-	ASSERT_EQ(natural("57558858585858").to_str(), "57558858585858");
-	ASSERT_EQ(natural("5464841321654684321354687465132146874651354984651354687465432135468798465132165487654321654798462168465468324792").to_str(), "5464841321654684321354687465132146874651354984651354687465432135468798465132165487654321654798462168465468324792");
-	ASSERT_EQ(natural("999911205").to_str(), "999911205");
+	ASSERT_EQ(natural("0").str(), "0");
+	ASSERT_EQ(natural("1").str(), "1");
+	ASSERT_EQ(natural("57").str(), "57");
+	ASSERT_EQ(natural("57558858585858").str(), "57558858585858");
+	ASSERT_EQ(natural("5464841321654684321354687465132146874651354984651354687465432135468798465132165487654321654798462168465468324792").str(), "5464841321654684321354687465132146874651354984651354687465432135468798465132165487654321654798462168465468324792");
+	ASSERT_EQ(natural("999911205").str(), "999911205");
 
 	// exceptions
 	{
@@ -106,35 +106,34 @@ TEST(NaturalTestSuite, TestPlus)
 
 	{
 		natural num(8589934586u);
-		ASSERT_EQ(num.to_str(), "8589934586");
+		ASSERT_EQ(num.str(), "8589934586");
 		num += num;
-		ASSERT_EQ(num.to_str(), "17179869172");
+		ASSERT_EQ(num.str(), "17179869172");
 	}
 	{
-
 		natural a(0u);
 
-		ASSERT_EQ(a.to_str(), "0");
+		ASSERT_EQ(a.str(), "0");
 		a += 3u;
-		ASSERT_EQ(a.to_str(), "3");
+		ASSERT_EQ(a.str(), "3");
 		a <<= 1u;
-		ASSERT_EQ(a.to_str(), "3000000000");
+		ASSERT_EQ(a.str(), "3000000000");
 		a += 10u;
-		ASSERT_EQ(a.to_str(), "3000000010");
+		ASSERT_EQ(a.str(), "3000000010");
 		a += 7u;
-		ASSERT_EQ(a.to_str(), "3000000017");
+		ASSERT_EQ(a.str(), "3000000017");
 		a += 99999999999u;
-		ASSERT_EQ(a.to_str(), "103000000016");
+		ASSERT_EQ(a.str(), "103000000016");
 		a >>= 1;
-		ASSERT_EQ(a.to_str(), "103");
+		ASSERT_EQ(a.str(), "103");
 		a += natural("5464841321654684321354687465132146874651354984651354687465432135468798465132165487654321654798462168465468324689");
-		ASSERT_EQ(a.to_str(), "5464841321654684321354687465132146874651354984651354687465432135468798465132165487654321654798462168465468324792");
+		ASSERT_EQ(a.str(), "5464841321654684321354687465132146874651354984651354687465432135468798465132165487654321654798462168465468324792");
 		a += a;
-		ASSERT_EQ(a.to_str(), "10929682643309368642709374930264293749302709969302709374930864270937596930264330975308643309596924336930936649584");
+		ASSERT_EQ(a.str(), "10929682643309368642709374930264293749302709969302709374930864270937596930264330975308643309596924336930936649584");
 		a *= 0u;
-		ASSERT_EQ(a.to_str(), "0");
+		ASSERT_EQ(a.str(), "0");
 		a += static_cast<uint32_t>(1e9 + 7);
-		ASSERT_EQ(a.to_str(), "1000000007");
+		ASSERT_EQ(a.str(), "1000000007");
 	}
 }
 
@@ -144,28 +143,28 @@ TEST(NaturalTestSuite, TestMinus)
 
 	{
 		natural num(8589934586u);
-		ASSERT_EQ(num.to_str(), "8589934586");
+		ASSERT_EQ(num.str(), "8589934586");
 		num -= num;
-		ASSERT_EQ(num.to_str(), "0");
+		ASSERT_EQ(num.str(), "0");
 	}
 	{
 
 		natural a(103000000016u);
 
-		ASSERT_EQ(a.to_str(), "103000000016");
+		ASSERT_EQ(a.str(), "103000000016");
 		--a;
-		ASSERT_EQ(a.to_str(), "103000000015");
+		ASSERT_EQ(a.str(), "103000000015");
 		a -= 150000u;
-		ASSERT_EQ(a.to_str(), "102999850015");
+		ASSERT_EQ(a.str(), "102999850015");
 		a -= 7998500096u;
-		ASSERT_EQ(a.to_str(), "95001349919");
+		ASSERT_EQ(a.str(), "95001349919");
 	}
 	{
 		natural a("41238749812376498394761293846981237649812736481726308412341234");
 
-		ASSERT_EQ(a.to_str(), "41238749812376498394761293846981237649812736481726308412341234");
+		ASSERT_EQ(a.str(), "41238749812376498394761293846981237649812736481726308412341234");
 		a -= natural("98123764983947612938469812376498127364817263468465");
-		ASSERT_EQ(a.to_str(), "41238749812278374629777346234042767837436238354361491148872769");
+		ASSERT_EQ(a.str(), "41238749812278374629777346234042767837436238354361491148872769");
 	}
 	{
 		try
@@ -195,29 +194,29 @@ TEST(NaturalTestSuite, TestProduct)
 
 	natural a("999911205");
 
-	ASSERT_EQ(a.to_str(), "999911205");
+	ASSERT_EQ(a.str(), "999911205");
 
 	a *= natural("554654684");
 
-	ASSERT_EQ(a.to_str(), "554605433437334220");
+	ASSERT_EQ(a.str(), "554605433437334220");
 
 	a *= 1u;
 
-	ASSERT_EQ(a.to_str(), "554605433437334220");
+	ASSERT_EQ(a.str(), "554605433437334220");
 
 	a *= 0u;
 
-	ASSERT_EQ(a.to_str(), "0");
+	ASSERT_EQ(a.str(), "0");
 
 	a += 554605433437u;
 
-	ASSERT_EQ(a.to_str(), "554605433437");
+	ASSERT_EQ(a.str(), "554605433437");
 
 	a *= 554605433437u;
 	a *= a;
 	a *= a;
 
-	ASSERT_EQ(a.to_str(), "8951028917198964712757504215998227867810191445839800441149608111417415741073044384885876111521");
+	ASSERT_EQ(a.str(), "8951028917198964712757504215998227867810191445839800441149608111417415741073044384885876111521");
 }
 
 TEST(NaturalTestSuite, TestBitwiseLeftShift)
@@ -232,17 +231,17 @@ TEST(NaturalTestSuite, TestBitwiseLeftShift)
 
 	initial += std::string(9 * 15, '0');
 
-	ASSERT_EQ(a.to_str(), initial);
+	ASSERT_EQ(a.str(), initial);
 
 	a <<= 0;
 
-	ASSERT_EQ(a.to_str(), initial);
+	ASSERT_EQ(a.str(), initial);
 
 	a <<= 1500000;
 
 	initial += std::string(9 * 1500000, '0');
 
-	ASSERT_EQ(a.to_str(), initial);
+	ASSERT_EQ(a.str(), initial);
 }
 
 TEST(NaturalTestSuite, TestBitwiseRightShift)
@@ -255,17 +254,17 @@ TEST(NaturalTestSuite, TestBitwiseRightShift)
 
 	a >>= 0;
 
-	ASSERT_EQ(a.to_str(), old);
+	ASSERT_EQ(a.str(), old);
 
 	old = old.substr(0, 9);
 
 	a >>= 1;
 
-	ASSERT_EQ(a.to_str(), old);
+	ASSERT_EQ(a.str(), old);
 
 	a >>= 7;
 
-	ASSERT_EQ(a.to_str(), "0");
+	ASSERT_EQ(a.str(), "0");
 }
 
 TEST(NaturalTestSuite, TestDivision)
@@ -290,15 +289,14 @@ TEST(NaturalTestSuite, TestDivision)
 	std::string remainder = "277023148385491500673702101";
 
 	auto ret = natural(very_large).long_div(natural(divisor));
-	ASSERT_EQ(ret.first.to_str(), quotient);
-	ASSERT_EQ(ret.second.to_str(), remainder);
+	ASSERT_EQ(ret.first.str(), quotient);
+	ASSERT_EQ(ret.second.str(), remainder);
 
 	natural num(very_large);
 
 	num <<= 17;
 
-	ASSERT_EQ((num
-			   / natural(divisor)).to_str(), "196126286994364719427352371814946481139567206978944028924245223561914598598342572620318055970420645044007842319309020510965457372840772412270676823713153740039602065340067348480364188933227621073696228858028328581642314245180501211270540331561880337515765283242188812515809136679792656415975503700621773860312954111030218228391060091874645009574680934122993774116829");
+	ASSERT_EQ((num / natural(divisor)).str(), "196126286994364719427352371814946481139567206978944028924245223561914598598342572620318055970420645044007842319309020510965457372840772412270676823713153740039602065340067348480364188933227621073696228858028328581642314245180501211270540331561880337515765283242188812515809136679792656415975503700621773860312954111030218228391060091874645009574680934122993774116829");
 
 	natural k = num;
 
@@ -308,11 +306,11 @@ TEST(NaturalTestSuite, TestDivision)
 
 	try
 	{
-		natural("554") / natural("0");
+		std::ignore = natural("554") / natural("0");
 	}
 	catch (const std::domain_error &e)
 	{
-		EXPECT_EQ(e.what(), std::string("cannot divide by zero"));
+		EXPECT_EQ(e.what(), std::string("division by zero"));
 	}
 }
 
@@ -337,11 +335,11 @@ TEST(NaturalTestSuite, TestModule)
 
 	try
 	{
-		natural("554") % natural("0");
+		std::ignore = natural("554") % natural("0");
 	}
 	catch (const std::domain_error &e)
 	{
-		EXPECT_EQ(e.what(), std::string("cannot divide by zero"));
+		EXPECT_EQ(e.what(), std::string("division by zero"));
 	}
 
 	ASSERT_EQ(natural("42") % natural("6"), natural("0"));

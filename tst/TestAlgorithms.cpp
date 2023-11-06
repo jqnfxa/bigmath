@@ -1,5 +1,5 @@
 #include <valarray>
-#include "algorithm/algorithm.hpp"
+#include "../big/algorithm/algorithm.hpp"
 #include "gtest/gtest.h"
 
 TEST(AlgorithmTestSuite, TestGcd)

@@ -7,94 +7,82 @@
 
 namespace big
 {
-	template <typename T>
-	concept unsigned_type = std::unsigned_integral<T>;
+class natural {
+public:
+	using digit_type = std::uint32_t;
+	using digits_type = std::vector<digit_type>;
+	using size_type = std::size_t;
 
-	class natural {
-	public:
-		using cell_type = std::uint32_t;
-		using size_type = std::size_t;
-		using num_representation = std::vector<cell_type>;
-		static constexpr cell_type number_system_base = 1'000'000'000;
-		static constexpr std::uint8_t bits_per_num = 9;
+	static constexpr digit_type number_system_base = 1'000'000'000;
+	static constexpr std::uint8_t bits_per_num = 9;
 
-	private:
-		num_representation digits_;
+private:
+	digits_type digits_;
 
-		void erase_leading_zeroes() & noexcept;
+	void erase_leading_zeroes() &;
+	void nullify() &;
 
-		void nullify() & noexcept;
+	void add_digit(digit_type digit, size_type position);
 
-		void add_digit(num_representation &num, cell_type digit, size_type position);
+	// Behavior is undefined if `num` is less than `digit`.
+	void sub_digit(digit_type digit, size_type position);
 
-		// If num < digit then undefined behavior
-		void subtract_digit(num_representation &num, cell_type digit, size_type position);
-
-	public:
-		template <unsigned_type type>
-		natural(type num = 0) noexcept
+public:
+	template <std::unsigned_integral T = std::uintmax_t>
+	[[nodiscard]] natural(T num = 0) noexcept
+	{
+		do
 		{
-			do
-			{
-				digits_.push_back(num % number_system_base);
-				num /= number_system_base;
-			} while (num != 0);
-
-			erase_leading_zeroes();
+			digits_.push_back(num % number_system_base);
+			num /= number_system_base;
 		}
+		while (num != 0);
+	}
 
-		natural(const std::string &num);
+	[[nodiscard]] natural(const std::string &num);
+	[[nodiscard]] natural(const digits_type &num);
 
-		natural(const num_representation &num);
 
-		bool operator==(const natural &other) const & noexcept;
+	[[nodiscard]] bool is_even() const noexcept;
+	[[nodiscard]] bool is_zero() const noexcept;
 
-		std::strong_ordering operator<=>(const natural &other) const & noexcept;
+	[[nodiscard]] std::pair<natural, natural> long_div(const natural &divisor) const;
 
-		[[nodiscard]] bool is_even() const & noexcept;
 
-		natural &operator++() & noexcept;
+	[[nodiscard]] std::strong_ordering operator<=>(const natural &other) const noexcept;
+	[[nodiscard]] bool operator==(const natural &other) const noexcept = default;
 
-		natural operator++(int) const & noexcept;
+	natural &operator++() &;
+	natural operator++(int) const &;
 
-		natural &operator--() &;
+	natural &operator--() &;
+	natural operator--(int) const &;
 
-		natural operator--(int) const &;
+	natural &operator+=(const natural &other) &;
+	natural &operator-=(const natural &other) &;
 
-		natural &operator+=(const natural &other) & noexcept;
+	natural &operator*=(const natural &other) &;
+	natural &operator/=(const natural &other) &;
 
-		natural &operator-=(const natural &other) &;
+	natural &operator%=(const natural &other) &;
 
-		natural &operator*=(const natural &other) & noexcept;
+	natural &operator<<=(std::size_t shift) &;
+	natural &operator>>=(std::size_t shift) &;
 
-		natural &operator/=(const natural &other) &;
+	[[nodiscard]] natural operator+(const natural &other) const;
+	[[nodiscard]] natural operator-(const natural &other) const;
 
-		natural &operator%=(const natural &other) &;
+	[[nodiscard]] natural operator*(const natural &other) const;
+	[[nodiscard]] natural operator/(const natural &other) const;
 
-		natural &operator<<=(std::size_t shift) &;
+	[[nodiscard]] natural operator%(const natural &other) const;
 
-		natural &operator>>=(std::size_t shift) & noexcept;
+	[[nodiscard]] [[nodiscard]] natural operator<<(std::size_t shift) const;
+	[[nodiscard]] natural operator>>(std::size_t shift) const;
 
-		natural operator+(const natural &other) const & noexcept;
 
-		natural operator-(const natural &other) const &;
+	[[nodiscard]] std::string str() const;
 
-		natural operator*(const natural &other) const & noexcept;
-
-		natural operator/(const natural &other) const &;
-
-		natural operator%(const natural &other) const &;
-
-		natural operator<<(std::size_t shift) const &;
-
-		natural operator>>(std::size_t shift) const & noexcept;
-
-		[[nodiscard]] bool is_zero() const & noexcept;
-
-		[[nodiscard]] std::pair<natural, natural> long_div(const natural &divisor) const &;
-
-		[[nodiscard]] std::string to_str() const & noexcept;
-
-		friend std::ostream &operator<<(std::ostream &out, const natural &num) noexcept;
-	};
+	friend std::ostream &operator<<(std::ostream &out, const natural &num);
+};
 }

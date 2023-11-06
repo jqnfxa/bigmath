@@ -1,6 +1,6 @@
 #pragma once
 
-#include "natural/natural.hpp"
+#include "../natural/natural.hpp"
 
 namespace big
 {
@@ -116,7 +116,7 @@ namespace big
 
 		[[nodiscard]] bool is_zero() const & noexcept;
 
-		[[nodiscard]] std::string to_str() const & noexcept;
+		[[nodiscard]] std::string str() const & noexcept;
 
 		friend std::ostream &operator<<(std::ostream &out, const integer &num) noexcept;
 	};

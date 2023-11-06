@@ -236,7 +236,7 @@ namespace big
 		return abs_.is_zero();
 	}
 
-	std::string integer::to_str() const & noexcept
+	std::string integer::str() const & noexcept
 	{
 		std::ostringstream ss;
 		ss << *this;
