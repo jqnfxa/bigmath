@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <limits>
 
-
 namespace big
 {
 class natural
@@ -37,6 +36,7 @@ private:
 		if (last == ranges::rend(digits_))
 		{
 			nullify();
+			return;
 		}
 
 		const auto distance = ranges::distance(ranges::rbegin(digits_), last);
@@ -61,13 +61,8 @@ private:
 			throw std::out_of_range(std::to_string(position) + " is out of range");
 		}
 
-		for (; position <= size; ++position)
+		for (; position < size; ++position)
 		{
-			if (position == size)
-			{
-				return digits_.push_back(digit);
-			}
-
 			const auto sum = digit + digits_[position];
 			if (sum < number_system_base)
 			{
@@ -77,6 +72,11 @@ private:
 
 			digits_[position] = sum % number_system_base;
 			digit = 1;
+		}
+
+		if (digit != 0)
+		{
+			digits_.back() = digit;
 		}
 	}
 
@@ -166,6 +166,11 @@ public:
 			return {0, *this};
 		}
 
+		if (divisor.digits_.size() < 2)
+		{
+			return fast_long_div(divisor.digits_.front());
+		}
+
 		natural quotient{};
 		natural remainder{};
 
@@ -209,6 +214,42 @@ public:
 		return {quotient, remainder};
 	}
 
+	// TODO: should merge this method with long_div
+	[[nodiscard]] constexpr std::pair<natural, natural> fast_long_div(digit_type divisor) const
+	{
+		if (divisor == 0)
+		{
+			throw std::domain_error("division by zero");
+		}
+
+		if (*this < divisor)
+		{
+			return {0, *this};
+		}
+
+		natural quotient{};
+		std::uintmax_t remainder = 0;
+
+		for (const auto &digit : digits_ | std::views::reverse)
+		{
+			remainder *= number_system_base;
+			remainder += digit;
+
+			if (remainder < divisor)
+			{
+				continue;
+			}
+
+			quotient <<= 1;
+			quotient += remainder / divisor;
+
+			remainder %= divisor;
+		}
+
+		quotient.erase_leading_zeroes();
+
+		return {quotient, remainder};
+	}
 
 	[[nodiscard]] constexpr std::strong_ordering operator<=>(const natural &other) const noexcept
 	{
