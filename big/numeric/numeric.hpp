@@ -26,7 +26,7 @@ template <typename T>
 {
 	if constexpr (std::same_as<T, natural>)
 	{
-		return 0;
+		return false;
 	}
 	else
 	if constexpr (detail::member_sign_bit<T>)
@@ -69,6 +69,6 @@ template <typename T, typename U>
 [[nodiscard]] constexpr auto distance(const T &a, const U &b) noexcept
 {
 	const auto order = a <=> b;
-	return order == 0 ? 0 : order > 0 ? a - b : b - a;
+	return order == std::strong_ordering::equal ? 0 : order > 0 ? a - b : b - a;
 }
 }

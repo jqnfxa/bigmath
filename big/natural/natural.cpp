@@ -59,8 +59,6 @@ std::string natural::str() const
 
 std::ostream &operator<<(std::ostream &out, const natural &num)
 {
-	static auto length = std::ceil(std::log10(natural::number_system_base));
-
 	const auto rbegin = std::ranges::rbegin(num.digits_);
 	const auto rend = std::ranges::rend(num.digits_);
 
@@ -68,7 +66,7 @@ std::ostream &operator<<(std::ostream &out, const natural &num)
 	{
 		if (it != rbegin)
 		{
-			out << std::setw(length) << std::setfill('0');
+			out << std::setw(natural::bits_per_num) << std::setfill('0');
 		}
 
 		out << *it;
