@@ -73,7 +73,7 @@ public:
 	template <traits::integral T>
 	[[nodiscard]] constexpr bool operator==(const T &other) const noexcept
 	{
-		return *this <=> other == 0;
+		return *this <=> other == std::strong_ordering::equal;
 	}
 
 	[[nodiscard]] constexpr bool sign_bit() const noexcept
@@ -141,7 +141,8 @@ public:
 	constexpr integer &operator*=(const T &other) &
 	{
 		sign_bit_ ^= numeric::sign_bit(other);
-		*this *= numeric::abs(other);
+		abs_ *= numeric::abs(other);
+		normalize();
 
 		return *this;
 	}
@@ -150,7 +151,8 @@ public:
 	constexpr integer &operator/=(const T &other) &
 	{
 		sign_bit_ ^= numeric::sign_bit(other);
-		*this /= numeric::abs(other);
+		abs_ /= numeric::abs(other);
+		normalize();
 
 		return *this;
 	}
@@ -159,11 +161,6 @@ public:
 	constexpr integer &operator%=(const T &other) &
 	{
 		abs_ %= numeric::abs(other);
-
-		if (!is_zero() && sign_bit_ ^ numeric::sign_bit(other))
-		{
-			*this += other;
-		}
 
 		normalize();
 		return *this;

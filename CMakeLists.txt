@@ -18,7 +18,13 @@ file(GLOB_RECURSE SOURCES "big/*.cpp")
 add_executable(MathModule_run ${SOURCES})
 
 # Add your test files
-add_executable(MathModule_test big/natural/natural.cpp big/natural/natural.hpp test/TestNatural.cpp test/main.cpp)
+add_executable(MathModule_test 	big/natural/natural.hpp 
+				big/natural/natural.cpp 
+				big/integer/integer.hpp 
+				big/integer/integer.cpp 
+				test/TestNatural.cpp 
+				test/TestInteger.cpp 
+				test/main.cpp)
 
 # Link GoogleTest to the test executable
 target_link_libraries(MathModule_test PRIVATE gtest GTest::GTest GTest::Main)

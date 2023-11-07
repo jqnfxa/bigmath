@@ -154,7 +154,7 @@ TEST(IntegerTestSuite, TestDivision)
 	}
 	catch (const std::domain_error &e)
 	{
-		EXPECT_EQ(e.what(), std::string("cannot divide by zero"));
+		EXPECT_EQ(e.what(), std::string("division by zero"));
 	}
 }
 
@@ -165,10 +165,10 @@ TEST(IntegerTestSuite, TestModule)
 	EXPECT_EQ(integer(15) % integer(7), integer(1));
 	EXPECT_EQ(integer(18) % integer(7), integer(4));
 	EXPECT_EQ(integer(-16) % integer(-7), integer(-2));
-	EXPECT_EQ(integer(16) % integer(-7), integer(-5));
-	EXPECT_EQ(integer(-16) % integer(7), integer(5));
-	EXPECT_EQ(integer(-12) % integer(7), integer(2));
-	EXPECT_EQ(integer(13) % integer(-7), integer(-1));
+	EXPECT_EQ(integer(16) % integer(-7), integer(2));
+	EXPECT_EQ(integer(-16) % integer(7), integer(-2));
+	EXPECT_EQ(integer(-12) % integer(7), integer(-5));
+	EXPECT_EQ(integer(13) % integer(-7), integer(6));
 	EXPECT_EQ(integer(-21) % integer(-7), integer(0));
 	EXPECT_EQ(integer(21) % integer(-7), integer(0));
 	EXPECT_EQ(integer(-21) % integer(7), integer(0));
@@ -180,7 +180,7 @@ TEST(IntegerTestSuite, TestModule)
 	}
 	catch (const std::domain_error &e)
 	{
-		EXPECT_EQ(e.what(), std::string("cannot divide by zero"));
+		EXPECT_EQ(e.what(), std::string("division by zero"));
 	}
 	try
 	{
@@ -188,33 +188,35 @@ TEST(IntegerTestSuite, TestModule)
 	}
 	catch (const std::domain_error &e)
 	{
-		EXPECT_EQ(e.what(), std::string("cannot divide by zero"));
+		EXPECT_EQ(e.what(), std::string("division by zero"));
 	}
 }
 
+/*
 TEST(IntegerTestSuite, TestConstruct)
 {
 	using namespace big;
 
-	// {
-	// 	rational b(16, 5u);
-	// 	integer a(b);
+	{
+		rational b(16, 5u);
+	 	integer a = b;
 
-	// 	ASSERT_EQ(a.str(), "3");
-	// 	ASSERT_EQ(a, 3);
-	// }
-	// {
-	// 	rational b(-165477446, 5395u);
-	// 	integer a(b);
+	 	ASSERT_EQ(a.str(), "3");
+	 	ASSERT_EQ(a, 3);
+	}
+	{
+	 	rational b(-165477446, 5395u);
+	 	integer a(b);
 
-	// 	ASSERT_EQ(a.str(), "-30672");
-	// 	ASSERT_EQ(a, integer(-30672));
-	// }
-	// {
-	// 	rational b(-1654, 5395u);
-	// 	integer a(b);
+	 	ASSERT_EQ(a.str(), "-30672");
+	 	ASSERT_EQ(a, integer(-30672));
+	}
+	{
+	 	rational b(-1654, 5395u);
+	 	integer a(b);
 
-	// 	ASSERT_EQ(a.str(), "0");
-	// 	ASSERT_EQ(a, 0);
-	// }
+	 	ASSERT_EQ(a.str(), "0");
+	 	ASSERT_EQ(a, 0);
+	}
 }
+*/

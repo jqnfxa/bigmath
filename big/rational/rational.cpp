@@ -63,7 +63,7 @@ namespace big
 	rational &rational::operator-=(const rational &other) & noexcept
 	{
 		rational copy = other;
-		copy.numerator_.flip_sing();
+		copy.numerator_.flip_sign();
 
 		*this += copy;
 
@@ -83,7 +83,7 @@ namespace big
 	{
 		if (other.sign_bit())
 		{
-			numerator_.flip_sing();
+			numerator_.flip_sign();
 		}
 
 		*this *= other.abs();
@@ -108,7 +108,7 @@ namespace big
 	{
 		if (other.sign_bit())
 		{
-			numerator_.flip_sing();
+			numerator_.flip_sign();
 		}
 
 		*this *= other.abs();

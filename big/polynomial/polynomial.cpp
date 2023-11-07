@@ -77,7 +77,7 @@ namespace big
 
 		if (numerators_gcd.sign_bit() ^ sign)
 		{
-			numerators_gcd.flip_sing();
+			numerators_gcd.flip_sign();
 		}
 
 		rational coefficient(std::move(numerators_gcd), std::move(denominators_lcm));
