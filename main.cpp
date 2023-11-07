@@ -1,5 +1,7 @@
 #include <iostream>
-#include "big/natural/natural.hpp"
+#include <ranges>
+#include <vector>
+#include <algorithm>
 
 int main()
 {

@@ -2,20 +2,28 @@ cmake_minimum_required(VERSION 3.26)
 project(MathModule)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-add_executable(MathModule main.cpp
-        big/natural/natural.cpp
-        big/natural/natural.hpp)
+# Enable testing
+enable_testing()
 
-add_executable(
-	test
-	tst/main.cpp
-	big/algorithm/algorithm.cpp
-	tst/TestNatural.cpp
-	tst/TestInteger.cpp
-	big/integer/integer.cpp
-	big/natural/natural.cpp
-)
+# Add GoogleTest directory
+find_package(GTest REQUIRED)
 
-find_package(GTest)
-target_link_libraries(test GTest)
+# Include source headers
+include_directories(big/)
+
+# Add your source files
+file(GLOB_RECURSE SOURCES "big/*.cpp")
+add_executable(MathModule_run ${SOURCES})
+
+# Add your test files
+add_executable(MathModule_test big/natural/natural.cpp big/natural/natural.hpp test/TestNatural.cpp test/main.cpp)
+
+# Link GoogleTest to the test executable
+target_link_libraries(MathModule_test PRIVATE gtest GTest::GTest GTest::Main)
+
+# Include GoogleTest's CMake functions
+include(GoogleTest)
+
+gtest_discover_tests(MathModule_test)
