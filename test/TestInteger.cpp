@@ -191,32 +191,3 @@ TEST(IntegerTestSuite, TestModule)
 		EXPECT_EQ(e.what(), std::string("division by zero"));
 	}
 }
-
-/*
-TEST(IntegerTestSuite, TestConstruct)
-{
-	using namespace big;
-
-	{
-		rational b(16, 5u);
-	 	integer a = b;
-
-	 	ASSERT_EQ(a.str(), "3");
-	 	ASSERT_EQ(a, 3);
-	}
-	{
-	 	rational b(-165477446, 5395u);
-	 	integer a(b);
-
-	 	ASSERT_EQ(a.str(), "-30672");
-	 	ASSERT_EQ(a, integer(-30672));
-	}
-	{
-	 	rational b(-1654, 5395u);
-	 	integer a(b);
-
-	 	ASSERT_EQ(a.str(), "0");
-	 	ASSERT_EQ(a, 0);
-	}
-}
-*/
