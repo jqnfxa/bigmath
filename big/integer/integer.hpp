@@ -161,8 +161,8 @@ public:
 	constexpr integer &operator%=(const T &other) &
 	{
 		abs_ %= numeric::abs(other);
-
 		normalize();
+		
 		return *this;
 	}
 
