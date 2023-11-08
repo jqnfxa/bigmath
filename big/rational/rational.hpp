@@ -1,72 +1,175 @@
 #pragma once
 
+#include "../traits/traits.hpp"
+#include "../numeric/numeric.hpp"
+#include "../numeric/rational.hpp"
 #include "../natural/natural.hpp"
 #include "../integer/integer.hpp"
+#include "../algorithm/algorithm.hpp"
+
 
 namespace big
 {
-	template <typename T>
-	concept multiplicable_with_rational = std::is_same_v<T, rational> ||
-										  std::is_same_v<T, integer> ||
-										  std::is_same_v<T, natural>;
-
 	class rational {
 		integer numerator_;
 		natural denominator_;
 
+		constexpr void simplify_fraction() & noexcept
+		{
+			const auto coefficient = gcd(numeric::abs(numerator_), numeric::abs(denominator_));
+			numerator_ /= coefficient;
+			denominator_ /= coefficient;
+		}
 	public:
-		rational();
+		template <traits::rationalisable T>
+		[[nodiscard]] constexpr rational(const T &other) noexcept
+			: numerator_(std::move(numeric::rational::numerator(other)))
+			, denominator_(std::move(numeric::rational::denominator(other)))
+		{
+			simplify_fraction();
+		}
 
-		explicit rational(integer numerator, natural denominator = 1u);
+		template <traits::integral T, traits::integral U>
+		[[nodiscard]] constexpr rational(const T &numerator = 0, const U &denominator = 1)
+			: numerator_(numeric::abs(numerator), numeric::sign_bit(numerator) ^ numeric::sign_bit(denominator))
+			, denominator_(numeric::abs(denominator))
+		{
+			if (denominator_.is_zero())
+			{
+				throw std::invalid_argument("it is impossible to represent a fraction with denominator 0");
+			}
 
-		void simplify_fraction() & noexcept;
+			simplify_fraction();
+		}
 
-		[[nodiscard]] bool is_integer() const & noexcept;
+		template <traits::rationalisable T>
+		[[nodiscard]] constexpr std::strong_ordering operator<=>(const T &other) const noexcept
+		{
+			return numerator_ * numeric::rational::denominator(other) <=> numeric::rational::numerator(other) * denominator_;
+		}
 
-		// TODO numerator and denominator getter to be able to modify them (integer &, natural &) ?
-		[[nodiscard]] const integer &numerator() const & noexcept;
+		template <traits::rationalisable T>
+		[[nodiscard]] constexpr bool operator==(const T &other) const noexcept
+		{
+			return *this <=> other == std::strong_ordering::equal;
+		}
 
-		[[nodiscard]] const natural &denominator() const & noexcept;
+		constexpr void flip_sign() & noexcept
+		{
+			return numerator_.flip_sign();
+		}
 
-		[[nodiscard]] rational inverse() const &;
+		[[nodiscard]] constexpr bool is_integer() const & noexcept
+		{
+			// We must guarantee that function will call after simplify_fraction
+			return denominator_ == 1u;
+		}
 
-		rational &operator+=(const rational &other) & noexcept;
+		[[nodiscard]] constexpr const integer &numerator() const & noexcept
+		{
+			return numerator_;
+		}
 
-		rational &operator-=(const rational &other) & noexcept;
+		[[nodiscard]] constexpr const natural &denominator() const & noexcept
+		{
+			return denominator_;
+		}
 
-		rational &operator*=(const rational &other) & noexcept;
+		[[nodiscard]] constexpr integer &numerator() & noexcept
+		{
+			return const_cast<integer &>(const_cast<const rational *>(this)->numerator());
+		}
 
-		rational &operator*=(const integer &other) & noexcept;
+		[[nodiscard]] constexpr natural &denominator() & noexcept
+		{
+			return const_cast<natural &>(const_cast<const rational *>(this)->denominator());
+		}
 
-		rational &operator*=(const natural &other) & noexcept;
+		[[nodiscard]] constexpr rational inverse() const &
+		{
+			return rational(denominator_, numerator_);
+		}
 
-		rational &operator/=(const rational &other) &;
+		template <traits::rationalisable T>
+		rational &operator+=(const T &other) & noexcept
+		{
+			numerator_ = numerator_ * numeric::rational::denominator(other) + numeric::rational::numerator(other) * denominator_;
+			denominator_ *= numeric::rational::denominator(other);
+			simplify_fraction();
 
-		rational &operator/=(const integer &other) &;
+			return *this;
+		}
 
-		rational &operator/=(const natural &other) &;
+		template <traits::rationalisable T>
+		rational &operator-=(const T &other) & noexcept
+		{
+			flip_sign();
+			*this += other;
+			flip_sign();
 
-		rational operator+(const rational &other) const & noexcept;
+			return *this;
+		}
 
-		rational operator-(const rational &other) const & noexcept;
+		template <traits::rationalisable T>
+		rational &operator*=(const T &other) & noexcept
+		{
+			if (numeric::sign_bit(*this) ^ numeric::sign_bit(numeric::rational::numerator(other)))
+			{
+				numerator_.flip_sign();
+			}
+			
+			numerator_ *= numeric::rational::numerator(other);
+			denominator_ *= numeric::rational::denominator(other);
+			simplify_fraction();
 
-		template <multiplicable_with_rational NumberType>
-		rational operator*(const NumberType &other) const & noexcept
+			return *this;
+		}
+
+		template <traits::rationalisable T>
+		rational &operator/=(const T &other) &
+		{
+			if (numeric::sign_bit(*this) ^ numeric::sign_bit(numeric::rational::numerator(other)))
+			{
+				numerator_.flip_sign();
+			}
+			
+			numerator_ *= numeric::rational::denominator(other);
+			denominator_ *= numeric::abs(numeric::rational::numerator(other));
+			simplify_fraction();
+
+			return *this;
+		}
+
+		template <traits::rationalisable T>
+		rational operator+(const T &other) const & noexcept
+		{
+			rational temp(*this);
+			temp += other;
+			return temp;
+		}
+
+                template <traits::rationalisable T>
+		rational operator-(const T &other) const & noexcept
+		{
+			rational temp(*this);
+			temp -= other;
+			return temp;
+		}
+
+		template <traits::rationalisable T>
+		rational operator*(const T &other) const & noexcept
 		{
 			rational temp(*this);
 			temp *= other;
 			return temp;
 		}
 
-		template <multiplicable_with_rational NumberType>
-		rational operator/(const NumberType &other) const &
+		template <traits::rationalisable T>
+		rational operator/(const T &other) const &
 		{
 			rational temp(*this);
 			temp /= other;
 			return temp;
 		}
-
-		// TODO operator<=> instead
-		bool operator==(const rational &other) const & noexcept;
 	};
 }

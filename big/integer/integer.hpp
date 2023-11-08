@@ -6,9 +6,6 @@
 
 namespace big
 {
-class rational;
-class integer;
-
 class integer
 {
 	bool sign_bit_;
@@ -26,6 +23,7 @@ class integer
 	constexpr integer &add(const T &other, const BinaryPred &sign_predicate) & noexcept
 	{
 		const auto &other_abs = numeric::abs(other);
+
 		if (sign_predicate(sign_bit_, numeric::sign_bit(other)))
 		{
 			abs_ += other_abs;
@@ -61,6 +59,7 @@ public:
 	[[nodiscard]] constexpr std::strong_ordering operator<=>(const T &other) const noexcept
 	{
 		const auto other_sign_bit = numeric::sign_bit(other);
+		
 		if (sign_bit_ ^ other_sign_bit)
 		{
 			return sign_bit_ && !other_sign_bit ? std::strong_ordering::less : std::strong_ordering::greater;

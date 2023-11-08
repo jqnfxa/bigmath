@@ -11,7 +11,7 @@ namespace detail
 template <typename T>
 concept member_abs = requires (T t)
 {
-	{ t.abs() } -> std::same_as<const natural &>;
+	{ t.abs() } -> std::common_reference_with<const natural &>;
 };
 
 template <typename T>
@@ -28,12 +28,10 @@ template <typename T>
 	{
 		return false;
 	}
-	else
 	if constexpr (detail::member_sign_bit<T>)
 	{
 		return val.sign_bit();
 	}
-	else
 	if constexpr (std::integral<T>)
 	{
 		return val < T{};
@@ -53,12 +51,10 @@ template <typename T>
 	{
 		return val;
 	}
-	else
 	if constexpr (detail::member_abs<T>)
 	{
 		return val.abs();
 	}
-	else
 	if constexpr (std::integral<T>)
 	{
 		return natural(val);
