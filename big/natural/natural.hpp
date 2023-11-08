@@ -104,6 +104,50 @@ private:
 		digits_[position] += number_system_base - digit;
 	}
 
+	// Since the method is private, it is not necessary to check division by 0.
+	// This method is helper function for long_div and should used to find the quotient 
+	// only when first > second
+        constexpr natural find_quotient(const natural &first, const natural &second) const &
+	{
+		natural quotient{};
+
+		if (std::ranges::size(second.digits_) == 1)
+		{
+			std::uintmax_t divisible = 0;
+
+			for (const auto &digit : first.digits_ | std::views::reverse)
+			{
+				divisible *= number_system_base;
+				divisible += digit;
+			}
+
+			quotient = divisible / second.digits_.front();
+		}
+		else
+		{
+			std::uintmax_t low = 1;
+			std::uintmax_t high = number_system_base;
+
+			while (low < high)
+			{
+				const auto mid = (low + high + 1) / 2;
+				natural temp = second * mid;
+
+				if (temp > first)
+				{
+					high = mid - 1;
+				}
+				else
+				{
+					low = mid;
+				}
+			}
+
+			quotient = low;
+		}
+
+		return quotient;
+	}
 public:
 	[[nodiscard]] constexpr natural(const digits_type &digits = {})
 	{
@@ -166,11 +210,6 @@ public:
 			return {0, *this};
 		}
 
-		if (divisor.digits_.size() < 2)
-		{
-			return fast_long_div(divisor.digits_.front());
-		}
-
 		natural quotient{};
 		natural remainder{};
 
@@ -184,69 +223,17 @@ public:
 				continue;
 			}
 
-			std::uintmax_t low = 1;
-			std::uintmax_t high = number_system_base;
-
-			while (low < high)
-			{
-				const std::uintmax_t mid = (low + high + 1) / 2;
-				natural temp = divisor * mid;
-
-				if (temp > remainder)
-				{
-					high = mid - 1;
-				}
-				else
-				{
-					low = mid;
-				}
-			}
+			// finding the maximum x such that: divisor * x <= remainder
+			const auto x = find_quotient(remainder, divisor);
 
 			quotient <<= 1;
-			quotient += low;
+			quotient += x;
 
-			remainder -= divisor * low;
+			remainder -= divisor * x;
 		}
 
 		quotient.erase_leading_zeroes();
 		remainder.erase_leading_zeroes();
-
-		return {quotient, remainder};
-	}
-
-	// TODO: should merge this method with long_div
-	[[nodiscard]] constexpr std::pair<natural, natural> fast_long_div(digit_type divisor) const
-	{
-		if (divisor == 0)
-		{
-			throw std::domain_error("division by zero");
-		}
-
-		if (*this < divisor)
-		{
-			return {0, *this};
-		}
-
-		natural quotient{};
-		std::uintmax_t remainder = 0;
-
-		for (const auto &digit : digits_ | std::views::reverse)
-		{
-			remainder *= number_system_base;
-			remainder += digit;
-
-			if (remainder < divisor)
-			{
-				continue;
-			}
-
-			quotient <<= 1;
-			quotient += remainder / divisor;
-
-			remainder %= divisor;
-		}
-
-		quotient.erase_leading_zeroes();
 
 		return {quotient, remainder};
 	}
