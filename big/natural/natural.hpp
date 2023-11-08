@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <limits>
 
+
 namespace big
 {
 class natural
