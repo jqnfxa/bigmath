@@ -1,6 +1,7 @@
 #include "../big/polynomial/polynomial.hpp"
 #include "gtest/gtest.h"
 
+
 TEST(PolynomialTestSuite, PolynomialCreate)
 {
 	using namespace big;
