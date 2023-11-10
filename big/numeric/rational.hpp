@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../traits/traits.hpp"
+#include "../integer/integer.hpp"
 
 
 namespace big::numeric::rational
@@ -12,7 +13,11 @@ template <typename T>
 	{
 		return val.numerator();
 	}
-	if constexpr (traits::integer_like<T>)
+	if constexpr (std::integral<T>)
+	{
+		return integer(val);
+	}
+	if constexpr (!std::integral<T> && traits::integer_like<T>)
 	{
 		return val;
 	}
@@ -25,7 +30,7 @@ template <typename T>
 	{
 		return val.denominator();
 	}
-	if constexpr (traits::integer_like<T>)
+	if constexpr (std::integral<T> || traits::integer_like<T>)
 	{
 		return natural(1);
 	}
@@ -37,4 +42,7 @@ concept rationalisable = requires (T t)
 	numerator(t);
 	denominator(t);
 };
+
+template <typename T>
+concept algebraic = rationalisable<T> || numeric::detail::member_has_x<T>;
 }

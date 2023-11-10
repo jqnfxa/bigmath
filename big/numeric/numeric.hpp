@@ -19,6 +19,12 @@ concept member_sign_bit = requires (T t)
 {
 	{ t.sign_bit() } -> std::same_as<bool>;
 };
+
+template <typename T>
+concept member_has_x = requires (T t)
+{
+	{ t.major_coefficient().sign_bit() } -> std::same_as<bool>;
+};
 }
 
 template <typename T>
@@ -66,5 +72,31 @@ template <typename T, typename U>
 {
 	const auto order = a <=> b;
 	return order == std::strong_ordering::equal ? 0 : order > 0 ? a - b : b - a;
+}
+
+template <typename T>
+[[nodiscard]] constexpr bool is_zero(const T &val) noexcept
+{
+	if constexpr (detail::member_has_x<T> || std::same_as<T, natural> || detail::member_sign_bit<T>)
+	{
+		return val.is_zero();
+	}
+	if constexpr (std::integral<T>)
+	{
+		return val == 0;
+	}
+}
+
+template <typename T>
+[[nodiscard]] constexpr T common_object(const T &val) noexcept
+{
+	if constexpr (numeric::detail::member_has_x<T>)
+	{
+		return T{{1}};
+	}
+	else 
+	{
+		return T{1};
+	}
 }
 }

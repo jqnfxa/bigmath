@@ -1,4 +1,5 @@
 #include "rational.hpp"
+#include "numeric/rational.hpp"
 #include <sstream>
 
 namespace big
@@ -12,11 +13,13 @@ std::string rational::str() const
 
 std::ostream &operator<<(std::ostream &out, const rational &num)
 {
-	if (numeric::sign_bit(num))
+	out << numeric::rational::numerator(num);
+
+	if (num.is_integer())
 	{
-		out << '-';
+		return out;
 	}
 
-	return out << num.numerator() << '/' << num.denominator();
+	return out << '/' << numeric::rational::denominator(num);
 }
 }

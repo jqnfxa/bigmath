@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../rational/rational.hpp"
+#include "../numeric/numeric.hpp"
+
 
 namespace big
 {
@@ -14,62 +16,113 @@ namespace big
 
 		polynomial() noexcept;
 
-		explicit polynomial(const std::vector<rational> &coefficients) noexcept;
+		explicit polynomial(const std::vector<rational> &coefficients);
 
-		[[nodiscard]] const rational &major_coefficient() const & noexcept;
+		[[nodiscard]] constexpr bool is_zero() const & noexcept
+		{
+                        return degree() == 0 && numeric::is_zero(major_coefficient());
+                }
 
-		[[nodiscard]] const std::vector<rational> &coefficients() const & noexcept;
+		[[nodiscard]] constexpr const rational &major_coefficient() const & noexcept
+		{
+                        return coefficients_.back();
+                }
 
-		[[nodiscard]] std::size_t degree() const & noexcept;
+		[[nodiscard]] constexpr const std::vector<rational> &coefficients() const & noexcept
+		{
+			return coefficients_;
+		}
 
+		[[nodiscard]] constexpr size_type degree() const & noexcept
+		{
+			return std::ranges::size(coefficients_) - 1;
+		}
+
+		[[nodiscard]] constexpr std::strong_ordering operator<=>(const polynomial &other) const & noexcept
+		{
+			return degree() <=> other.degree();
+		}
+
+		[[nodiscard]] constexpr bool operator==(const polynomial &other) const & noexcept
+		{
+			return *this <=> other == std::strong_ordering::equal;
+		}
+		
 		[[nodiscard]] polynomial derivative() const & noexcept;
-
 		[[nodiscard]] polynomial normalize() const & noexcept;
-
 		void normalize() & noexcept;
-
 		[[nodiscard]] polynomial multiple_roots_to_simple() const & noexcept;
 
-		rational &at(std::size_t degree) &;
 
-		[[nodiscard]] const rational &at(std::size_t degree) const &;
+		[[nodiscard]] rational &at(size_type degree) &;
+		[[nodiscard]] const rational &at(size_type degree) const &;
 
-		rational &operator[](std::size_t degree) &;
 
-		const rational &operator[](std::size_t degree) const &;
+		rational &operator[](size_type degree) &;
+		const rational &operator[](size_type degree) const &;
+
 
 		polynomial &operator+=(const polynomial &other) & noexcept;
-
 		polynomial &operator-=(const polynomial &other) & noexcept;
-
-		polynomial &operator*=(const rational &coefficient) & noexcept;
-
 		polynomial &operator*=(const polynomial &other) & noexcept;
-
-		polynomial &operator<<=(std::size_t shift) &;
-
 		polynomial &operator/=(const polynomial &other) &;
-
-		polynomial &operator/=(const rational &coefficient) &;
-
 		polynomial &operator%=(const polynomial &other) &;
+		polynomial &operator<<=(size_type shift) &;
 
-		polynomial operator+(const polynomial &other) const & noexcept;
 
-		polynomial operator-(const polynomial &other) const & noexcept;
+		[[nodiscard]] polynomial operator+(const polynomial &other) const noexcept;
+		[[nodiscard]] polynomial operator-(const polynomial &other) const noexcept;
+		[[nodiscard]] polynomial operator*(const polynomial &other) const noexcept;
+		[[nodiscard]] polynomial operator/(const polynomial &other) const;
+		[[nodiscard]] polynomial operator%(const polynomial &other) const;
+		[[nodiscard]] polynomial operator<<(size_type shift) const;
 
-		polynomial operator*(const rational &coefficient) const & noexcept;
+		
+		[[nodiscard]] std::string to_str() const;
+		friend std::ostream &operator<<(std::ostream &os, const polynomial &polynomial);
 
-		polynomial operator*(const polynomial &other) const & noexcept;
-
-		polynomial operator<<(std::size_t shift) const &;
-
-		polynomial operator/(const polynomial &other) const &;
-
-		polynomial operator/(const rational &coefficient) const &;
-
-		polynomial operator%(const polynomial &other) const &;
 
 		[[nodiscard]] std::pair<polynomial, polynomial> long_div(const polynomial &divisor) const &;
+
+
+		template <numeric::rational::rationalisable T>
+		polynomial &operator*=(const T &scalar) & noexcept
+		{
+			for (auto &coefficient : coefficients_)
+			{
+				coefficient *= scalar;
+			}
+
+			shrink_to_fit();
+			return *this;
+		}
+
+		template <numeric::rational::rationalisable T>
+		polynomial &operator/=(const T &scalar) &
+		{
+			for (auto &coefficient : coefficients_)
+			{
+				coefficient /= scalar;
+			}
+
+			shrink_to_fit();
+			return *this;
+		}
+
+		template <numeric::rational::rationalisable T>
+		polynomial operator*(const T &scalar) noexcept
+		{
+			polynomial result(*this);
+                        result *= scalar;
+                        return result;
+		}
+
+		template <numeric::rational::rationalisable T>
+		polynomial operator/(const T &scalar)
+		{
+			polynomial result(*this);
+                        result /= scalar;
+                        return result;
+		}
 	};
 }

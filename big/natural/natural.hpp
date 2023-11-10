@@ -191,7 +191,7 @@ public:
 
 	[[nodiscard]] constexpr bool is_even() const noexcept
 	{
-		return ~(digits_[0] & 1);
+		return (digits_[0] & 1) == 0;
 	}
 
 	[[nodiscard]] constexpr bool is_zero() const noexcept

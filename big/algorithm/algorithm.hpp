@@ -2,24 +2,25 @@
 
 #include <utility>
 #include "../natural/natural.hpp"
-#include "../polynomial/polynomial.hpp"
+#include "../integer/integer.hpp"
+#include "../numeric/rational.hpp"
+#include "../numeric/rational.hpp"
 
 
 namespace big
 {
-[[nodiscard]] polynomial gcd(const polynomial &a, const polynomial &b);
-
-[[nodiscard]] constexpr natural gcd(const natural &a, const natural &b)
+template <numeric::rational::algebraic T>
+[[nodiscard]] constexpr T gcd(const T &a, const T &b) noexcept
 {
 	if (a < b)
 	{
 		return gcd(b, a);
 	}
 
-	natural first(a);
-	natural second(b);
+	T first = a;
+	T second = b;
 
-	while (second != 0)
+	while (!numeric::is_zero(second))
 	{
 		first = std::exchange(second, first % second);
 	}
@@ -27,12 +28,38 @@ namespace big
 	return first;
 }
 
-[[nodiscard]] constexpr natural lcm(const natural &a, const natural &b)
+template <numeric::rational::algebraic T>
+[[nodiscard]] constexpr T lcm(const T &a, const T &b)
 {
-	natural result = a * b;
+	T result = a * b;
 	result /= gcd(a, b);
 	return result;
 }
 
-[[nodiscard]] rational pow(rational num, integer base);
+template <numeric::rational::algebraic T>
+[[nodiscard]] constexpr T pow(T object, integer power_base) noexcept
+{
+	T result = numeric::common_object(object);
+
+	if (numeric::sign(power_base) < 0)
+	{
+		return result / pow(std::move(object), -power_base);
+	}
+
+	while (!numeric::is_zero(power_base))
+	{
+		if (numeric::abs(power_base).is_even())
+		{
+			object *= object;
+			power_base /= 2;
+		}
+		else
+		{
+			result *= object;
+			--power_base;
+		}
+	}
+
+	return result;
+}
 }

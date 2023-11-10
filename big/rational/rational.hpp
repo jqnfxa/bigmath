@@ -52,13 +52,20 @@ namespace big
 		template <numeric::rational::rationalisable T>
 		[[nodiscard]] constexpr std::strong_ordering operator<=>(const T &other) const noexcept
 		{
-			return numerator_ * numeric::rational::denominator(other) <=> numeric::rational::numerator(other) * denominator_;
+			const auto &first_numerator = numeric::rational::numerator(*this) * numeric::rational::denominator(other);
+			const auto &second_numerator = numeric::rational::numerator(other) * numeric::rational::denominator(*this);
+			return first_numerator <=> second_numerator;
 		}
 
 		template <numeric::rational::rationalisable T>
 		[[nodiscard]] constexpr bool operator==(const T &other) const noexcept
 		{
 			return *this <=> other == std::strong_ordering::equal;
+		}
+
+		[[nodiscard]] constexpr bool is_zero() const noexcept 
+		{
+			return numeric::is_zero(numerator_);
 		}
 
 		constexpr void flip_sign() & noexcept
@@ -68,7 +75,7 @@ namespace big
 
 		[[nodiscard]] constexpr bool sign_bit() const noexcept 
 		{
-			return numerator_.sign_bit();
+			return numeric::sign_bit(numerator_);
 		}
 
 		[[nodiscard]] constexpr bool is_integer() const & noexcept
@@ -104,7 +111,7 @@ namespace big
 		template <numeric::rational::rationalisable T>
 		rational &operator+=(const T &other) & noexcept
 		{
-			numerator_ = numerator_ * numeric::rational::denominator(other) + numeric::rational::numerator(other) * denominator_;
+			numerator_ = numeric::rational::numerator(*this) * numeric::rational::denominator(other) + numeric::rational::numerator(other) * numeric::rational::denominator(*this);
 			denominator_ *= numeric::rational::denominator(other);
 			simplify_fraction();
 

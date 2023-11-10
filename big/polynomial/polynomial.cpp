@@ -1,50 +1,42 @@
 #include <numeric>
+#include <sstream>
 #include "polynomial.hpp"
 #include "algorithm/algorithm.hpp"
 
 namespace big
 {
-	polynomial::polynomial() noexcept: coefficients_(1, rational(0))
+	polynomial::polynomial() noexcept
+		: coefficients_(1, rational(0))
 	{
 	}
 
-	polynomial::polynomial(const std::vector<rational> &coefficients) noexcept
+	polynomial::polynomial(const std::vector<rational> &coefficients)
 	{
-		coefficients_.assign(coefficients.rbegin(), coefficients.rend());
+		if (std::ranges::empty(coefficients))
+		{
+			throw std::invalid_argument("coefficients cannot be empty");
+		}
+		
+		coefficients_.assign(std::ranges::rbegin(coefficients), std::ranges::rend(coefficients));
 		shrink_to_fit();
 	}
 
 	void polynomial::shrink_to_fit() & noexcept
 	{
-		while (coefficients_.size() > 1 && coefficients_.back().numerator().is_zero())
+		while (std::ranges::size(coefficients_) > 1 && numeric::rational::numerator(major_coefficient()).is_zero())
 		{
 			coefficients_.pop_back();
 		}
 	}
 
-	const rational &polynomial::major_coefficient() const & noexcept
-	{
-		return coefficients_.back();
-	}
-
-	const std::vector<rational> &polynomial::coefficients() const & noexcept
-	{
-		return coefficients_;
-	}
-
-	std::size_t polynomial::degree() const & noexcept
-	{
-		return coefficients_.size() - 1;
-	}
-
 	polynomial polynomial::derivative() const & noexcept
 	{
 		polynomial temp(*this);
-		temp.coefficients_.front() = rational(0);
+		temp.coefficients_.at(0) = rational(0);
 
-		for (size_type i = 1; i < temp.coefficients_.size(); ++i)
+		for (size_type i = 1; i < std::ranges::size(temp.coefficients_); ++i)
 		{
-			temp.coefficients_[i - 1] = temp.coefficients_[i] * rational(integer(i));
+			temp.coefficients_[i - 1] = temp.coefficients_[i] * i;
 		}
 		if (temp.degree() > 0)
 		{
@@ -63,25 +55,23 @@ namespace big
 
 	void polynomial::normalize() & noexcept
 	{
-		integer numerators_gcd = coefficients_.front().numerator();
-		natural denominators_lcm = coefficients_.front().denominator();
+		rational scalar = coefficients_.at(0);
+		bool sign = numeric::sign_bit(scalar);
 
-		bool sign = numerators_gcd.sign_bit();
-
-		for (auto &coefficient: coefficients_)
+		for (auto &coefficient : coefficients_)
 		{
-			sign ^= coefficient.numerator().sign_bit();
-			numerators_gcd = integer(std::move(gcd(numerators_gcd.abs(), coefficient.numerator().abs())));
-			denominators_lcm = std::move(lcm(denominators_lcm, coefficient.denominator()));
+			sign ^= numeric::sign_bit(coefficient);
+			scalar.numerator() = gcd(numeric::abs(numeric::rational::numerator(scalar)), 
+						numeric::abs(numeric::rational::numerator(coefficient)));
+			scalar.denominator() = lcm(scalar.denominator(), coefficient.denominator());
 		}
 
-		if (numerators_gcd.sign_bit() ^ sign)
+		if (numeric::sign_bit(scalar) ^ sign)
 		{
-			numerators_gcd.flip_sign();
+			scalar.flip_sign();
 		}
 
-		rational coefficient(std::move(numerators_gcd), std::move(denominators_lcm));
-		*this /= coefficient;
+		*this /= scalar;
 	}
 
 	polynomial polynomial::multiple_roots_to_simple() const & noexcept
@@ -101,7 +91,7 @@ namespace big
 	{
 		if (degree >= coefficients_.size())
 		{
-			throw std::out_of_range("Degree is out of range");
+			throw std::out_of_range("degree is out of range");
 		}
 
 		return coefficients_[degree];
@@ -119,7 +109,7 @@ namespace big
 
 	polynomial &polynomial::operator+=(const polynomial &other) & noexcept
 	{
-		coefficients_.resize(std::max(degree(), other.degree()) + 1, rational(0));
+		coefficients_.resize(std::ranges::max(degree(), other.degree()) + 1, rational{});
 
 		for (size_type i = 0; i < other.coefficients_.size(); ++i)
 		{
@@ -132,30 +122,19 @@ namespace big
 
 	polynomial &polynomial::operator-=(const polynomial &other) & noexcept
 	{
-		*this *= rational(-1);
+		*this *= -1;
 		*this += other;
-		*this *= rational(-1);
+		*this *= -1;
 
-		return *this;
-	}
-
-	polynomial &polynomial::operator*=(const rational &coefficient) & noexcept
-	{
-		for (auto &polynomial_coefficient: coefficients_)
-		{
-			polynomial_coefficient *= coefficient;
-		}
-
-		shrink_to_fit();
 		return *this;
 	}
 
 	polynomial &polynomial::operator*=(const polynomial &other) & noexcept
 	{
-		std::vector<rational> result(degree() + other.degree() + 1, rational(0));
+		std::vector<rational> result(degree() + other.degree() + 1, rational{});
 
-		auto cur_len = coefficients_.size();
-		auto other_len = other.coefficients_.size();
+		const auto &cur_len = coefficients_.size();
+		const auto &other_len = other.coefficients_.size();
 
 		for (size_type i = 0; i < cur_len; ++i)
 		{
@@ -171,7 +150,19 @@ namespace big
 		return *this;
 	}
 
-	polynomial &polynomial::operator<<=(std::size_t shift) &
+	polynomial &polynomial::operator/=(const polynomial &other) &
+	{
+		coefficients_ = long_div(other).first.coefficients_;
+		return *this;
+	}
+
+	polynomial &polynomial::operator%=(const polynomial &other) &
+	{
+		coefficients_ = long_div(other).second.coefficients_;
+		return *this;
+	}
+
+	polynomial &polynomial::operator<<=(size_type shift) &
 	{
 		const auto &size = coefficients_.size();
 
@@ -188,115 +179,128 @@ namespace big
 
 		const auto &rbegin = coefficients_.rbegin();
 		std::copy(std::next(rbegin, shift), coefficients_.rend(), rbegin);
-		std::fill_n(coefficients_.begin(), shift, rational(0));
+		std::fill_n(coefficients_.begin(), shift, rational{});
 
 		return *this;
 	}
 
-	polynomial &polynomial::operator/=(const polynomial &other) &
-	{
-		coefficients_ = std::move(long_div(other).first.coefficients_);
-		return *this;
-	}
-
-	polynomial &polynomial::operator/=(const rational &coefficient) &
-	{
-		*this *= coefficient.inverse();
-		return *this;
-	}
-
-	polynomial &polynomial::operator%=(const polynomial &other) &
-	{
-		coefficients_ = std::move(long_div(other).second.coefficients_);
-		return *this;
-	}
-
-	polynomial polynomial::operator+(const polynomial &other) const & noexcept
+	polynomial polynomial::operator+(const polynomial &other) const noexcept
 	{
 		polynomial temp(*this);
 		temp += other;
 		return temp;
 	}
 
-	polynomial polynomial::operator-(const polynomial &other) const & noexcept
+	polynomial polynomial::operator-(const polynomial &other) const noexcept
 	{
 		polynomial temp(*this);
 		temp -= other;
 		return temp;
 	}
 
-	polynomial polynomial::operator*(const rational &coefficient) const & noexcept
-	{
-		polynomial temp(*this);
-		temp *= coefficient;
-		return temp;
-	}
-
-	polynomial polynomial::operator*(const polynomial &other) const & noexcept
+	polynomial polynomial::operator*(const polynomial &other) const noexcept
 	{
 		polynomial temp(*this);
 		temp *= other;
 		return temp;
 	}
 
-	polynomial polynomial::operator<<(std::size_t shift) const &
-	{
-		polynomial temp(*this);
-		temp <<= shift;
-		return temp;
-	}
-
-	polynomial polynomial::operator/(const polynomial &other) const &
+	polynomial polynomial::operator/(const polynomial &other) const
 	{
 		polynomial temp(*this);
 		temp /= other;
 		return temp;
 	}
 
-	polynomial polynomial::operator/(const rational &coefficient) const &
-	{
-		polynomial temp(*this);
-		temp /= coefficient;
-		return *this;
-	}
-
-	polynomial polynomial::operator%(const polynomial &other) const &
+	polynomial polynomial::operator%(const polynomial &other) const
 	{
 		polynomial temp(*this);
 		temp %= other;
 		return temp;
 	}
 
+	polynomial polynomial::operator<<(std::size_t shift) const
+	{
+		polynomial temp(*this);
+		temp <<= shift;
+		return temp;
+	}
+
+	[[nodiscard]] std::string polynomial::to_str() const
+	{
+		std::stringstream ss;
+                ss << *this;
+                return ss.str();
+	}
+	
+	std::ostream &operator<<(std::ostream &os, const polynomial &polynomial)
+	{
+		for (polynomial::size_type i = 0; i < polynomial.coefficients().size(); ++i)
+		{
+			const auto &mapped_index = polynomial.degree() - i;
+
+			if (numeric::is_zero(polynomial[mapped_index]) && i != polynomial.degree())
+			{
+				continue;
+			}
+
+			if (i != 0 && !numeric::sign_bit(polynomial[mapped_index]))
+			{
+				os << "+";
+			}
+
+			if (polynomial[mapped_index] != 1 || i == polynomial.degree())
+			{
+				os << polynomial[mapped_index];
+			}
+
+			if (i != polynomial.degree())
+			{
+				if (polynomial[mapped_index] != 1)
+				{
+					os << "*";
+				}
+
+				os << "x";
+
+				if (mapped_index > 1)
+				{
+					os << "^" << mapped_index;
+				}
+			}
+		}
+
+		return os;
+	}
+
 	std::pair<polynomial, polynomial> polynomial::long_div(const polynomial &divisor) const &
 	{
-		if (divisor.degree() == 0 && divisor.major_coefficient().numerator().is_zero())
+		if (divisor.degree() == 0 && numeric::rational::numerator(divisor.major_coefficient()).is_zero())
 		{
 			throw std::logic_error("Cannot divide by 0");
 		}
 		if (divisor.degree() > degree())
 		{
-			return {polynomial(), *this};
+			return {polynomial{}, *this};
 		}
 
 		polynomial remainder = *this;
-		polynomial quotient;
+		polynomial quotient{};
 
 		quotient <<= remainder.degree() - divisor.degree();
 
-		while (remainder.degree() >= divisor.degree() && !remainder.major_coefficient().numerator().is_zero())
+		while (remainder.degree() >= divisor.degree() && !numeric::rational::numerator(remainder.major_coefficient()).is_zero())
 		{
-			auto new_coefficient = remainder.major_coefficient() / divisor.major_coefficient();
-			auto degree = remainder.degree() - divisor.degree();
+			const auto new_coefficient = remainder.major_coefficient() / divisor.major_coefficient();
+			const auto degree = remainder.degree() - divisor.degree();
 
-			// Store new coefficient
 			quotient[degree] = new_coefficient;
 
-			// Subtraction of the next polynomial
-			polynomial divisible({new_coefficient});
-			divisible <<= degree;
-			divisible *= divisor;
+			polynomial subtract({new_coefficient});
+			subtract <<= degree;
+			subtract *= divisor;
 
-			remainder -= divisible;
+			remainder -= subtract;
 		}
 
 		quotient.shrink_to_fit();

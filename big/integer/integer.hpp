@@ -240,7 +240,7 @@ public:
 		return abs_.is_zero();
 	}
 
-	[[nodiscard]] std::string str() const noexcept;
-	friend std::ostream &operator<<(std::ostream &out, const integer &num) noexcept;
+	[[nodiscard]] std::string str() const;
+	friend std::ostream &operator<<(std::ostream &out, const integer &num);
 };
 }

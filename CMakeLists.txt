@@ -13,13 +13,12 @@ find_package(GTest REQUIRED)
 # Include source headers
 include_directories(big/)
 
-# Add your source files
+# source files
 file(GLOB_RECURSE SOURCES "big/*.cpp")
 add_executable(MathModule_run ${SOURCES})
 
-# Add your test files
+# test files
 add_executable(MathModule_test 	big/algorithm/algorithm.hpp
-				big/algorithm/algorithm.cpp
 				big/traits/traits.hpp
 				big/numeric/numeric.hpp
 				big/numeric/rational.hpp
@@ -29,9 +28,13 @@ add_executable(MathModule_test 	big/algorithm/algorithm.hpp
 				big/integer/integer.cpp 
 				big/rational/rational.hpp
 				big/rational/rational.cpp
+				big/polynomial/polynomial.hpp
+				big/polynomial/polynomial.cpp
 				test/TestNatural.cpp 
 				test/TestInteger.cpp 
 				test/TestRational.cpp
+				test/TestPolynomial.cpp
+				test/TestAlgorithms.cpp
 				test/main.cpp)
 
 # Link GoogleTest to the test executable
