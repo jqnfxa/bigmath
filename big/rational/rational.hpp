@@ -14,6 +14,14 @@ namespace big
 		integer numerator_;
 		natural denominator_;
 
+		constexpr void throw_if_denominator_is_zero()
+		{
+    			if (denominator_.is_zero())
+    			{
+        			throw std::domain_error("it is impossible to represent a fraction with denominator 0");
+    			}
+		}
+
 		constexpr void simplify_fraction() & noexcept
 		{
 			const auto coefficient = gcd(numeric::abs(numerator_), numeric::abs(denominator_));
@@ -21,7 +29,10 @@ namespace big
 			denominator_ /= coefficient;
 		}
 	public:
-		template <traits::rationalisable T>
+		rational()  noexcept : rational(0)
+		{}
+
+		template <numeric::rational::rationalisable T>
 		[[nodiscard]] constexpr rational(const T &other) noexcept
 			: numerator_(std::move(numeric::rational::numerator(other)))
 			, denominator_(std::move(numeric::rational::denominator(other)))
@@ -29,26 +40,22 @@ namespace big
 			simplify_fraction();
 		}
 
-		template <traits::integral T, traits::integral U>
+		template <traits::integer_like T, traits::integer_like U>
 		[[nodiscard]] constexpr rational(const T &numerator = 0, const U &denominator = 1)
 			: numerator_(numeric::abs(numerator), numeric::sign_bit(numerator) ^ numeric::sign_bit(denominator))
 			, denominator_(numeric::abs(denominator))
 		{
-			if (denominator_.is_zero())
-			{
-				throw std::invalid_argument("it is impossible to represent a fraction with denominator 0");
-			}
-
+			throw_if_denominator_is_zero();
 			simplify_fraction();
 		}
 
-		template <traits::rationalisable T>
+		template <numeric::rational::rationalisable T>
 		[[nodiscard]] constexpr std::strong_ordering operator<=>(const T &other) const noexcept
 		{
 			return numerator_ * numeric::rational::denominator(other) <=> numeric::rational::numerator(other) * denominator_;
 		}
 
-		template <traits::rationalisable T>
+		template <numeric::rational::rationalisable T>
 		[[nodiscard]] constexpr bool operator==(const T &other) const noexcept
 		{
 			return *this <=> other == std::strong_ordering::equal;
@@ -59,9 +66,13 @@ namespace big
 			return numerator_.flip_sign();
 		}
 
+		[[nodiscard]] constexpr bool sign_bit() const noexcept 
+		{
+			return numerator_.sign_bit();
+		}
+
 		[[nodiscard]] constexpr bool is_integer() const & noexcept
 		{
-			// We must guarantee that function will call after simplify_fraction
 			return denominator_ == 1u;
 		}
 
@@ -90,7 +101,7 @@ namespace big
 			return rational(denominator_, numerator_);
 		}
 
-		template <traits::rationalisable T>
+		template <numeric::rational::rationalisable T>
 		rational &operator+=(const T &other) & noexcept
 		{
 			numerator_ = numerator_ * numeric::rational::denominator(other) + numeric::rational::numerator(other) * denominator_;
@@ -100,7 +111,7 @@ namespace big
 			return *this;
 		}
 
-		template <traits::rationalisable T>
+		template <numeric::rational::rationalisable T>
 		rational &operator-=(const T &other) & noexcept
 		{
 			flip_sign();
@@ -110,14 +121,9 @@ namespace big
 			return *this;
 		}
 
-		template <traits::rationalisable T>
+		template <numeric::rational::rationalisable T>
 		rational &operator*=(const T &other) & noexcept
 		{
-			if (numeric::sign_bit(*this) ^ numeric::sign_bit(numeric::rational::numerator(other)))
-			{
-				numerator_.flip_sign();
-			}
-			
 			numerator_ *= numeric::rational::numerator(other);
 			denominator_ *= numeric::rational::denominator(other);
 			simplify_fraction();
@@ -125,22 +131,23 @@ namespace big
 			return *this;
 		}
 
-		template <traits::rationalisable T>
+		template <numeric::rational::rationalisable T>
 		rational &operator/=(const T &other) &
 		{
-			if (numeric::sign_bit(*this) ^ numeric::sign_bit(numeric::rational::numerator(other)))
+			if (numeric::sign_bit(other))
 			{
-				numerator_.flip_sign();
+				flip_sign();
 			}
 			
 			numerator_ *= numeric::rational::denominator(other);
 			denominator_ *= numeric::abs(numeric::rational::numerator(other));
+			throw_if_denominator_is_zero();
 			simplify_fraction();
 
 			return *this;
 		}
 
-		template <traits::rationalisable T>
+		template <numeric::rational::rationalisable T>
 		rational operator+(const T &other) const & noexcept
 		{
 			rational temp(*this);
@@ -148,7 +155,7 @@ namespace big
 			return temp;
 		}
 
-                template <traits::rationalisable T>
+                template <numeric::rational::rationalisable T>
 		rational operator-(const T &other) const & noexcept
 		{
 			rational temp(*this);
@@ -156,7 +163,7 @@ namespace big
 			return temp;
 		}
 
-		template <traits::rationalisable T>
+		template <numeric::rational::rationalisable T>
 		rational operator*(const T &other) const & noexcept
 		{
 			rational temp(*this);
@@ -164,12 +171,15 @@ namespace big
 			return temp;
 		}
 
-		template <traits::rationalisable T>
+		template <numeric::rational::rationalisable T>
 		rational operator/(const T &other) const &
 		{
 			rational temp(*this);
 			temp /= other;
 			return temp;
 		}
+
+		[[nodiscard]] std::string str() const;
+		friend std::ostream &operator<<(std::ostream &out, const rational &num);
 	};
 }
