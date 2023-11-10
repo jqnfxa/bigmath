@@ -1,36 +1,18 @@
 #pragma once
 
-#include <type_traits>
-#include "numeric.hpp"
-#include "../natural/natural.hpp"
-#include "../integer/integer.hpp"
+#include "../traits/traits.hpp"
 
 
 namespace big::numeric::rational
 {
-namespace detail
-{
-template <typename T>
-concept has_member_numerator = requires (T t)
-{
-	 { t.numerator() } -> std::common_reference_with<const integer&>;
-};
-
-template <typename T>
-concept has_member_denominator = requires (T t)
-{
-	 { t.denominator() } -> std::common_reference_with<const natural&>;
-};
-}
-
 template <typename T>
 [[nodiscard]] constexpr decltype (auto) numerator(const T &val) noexcept
 {
-	if constexpr (detail::has_member_numerator<T>)
+	if constexpr (traits::detail::has_member_numerator<T>)
 	{
 		return val.numerator();
 	}
-	if constexpr (std::integral<T>)
+	if constexpr (traits::integer_like<T>)
 	{
 		return val;
 	}
@@ -39,13 +21,20 @@ template <typename T>
 template <typename T>
 [[nodiscard]] constexpr decltype (auto) denominator(const T &val) noexcept
 {
-	if constexpr (detail::has_member_denominator<T>)
+	if constexpr (traits::detail::has_member_denominator<T>)
 	{
 		return val.denominator();
 	}
-	if constexpr (std::integral<T>)
+	if constexpr (traits::integer_like<T>)
 	{
 		return natural(1);
 	}
 }
+
+template <typename T>
+concept rationalisable = requires (T t)
+{
+	numerator(t);
+	denominator(t);
+};
 }
