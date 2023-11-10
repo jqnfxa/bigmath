@@ -5,18 +5,25 @@
 
 namespace big::traits
 {
-class rational;
-
 template <typename T>
-concept integral = requires (T t, T u)
+concept integer_like = requires (T t)
 {
-	numeric::sign(t);
-	numeric::abs(t);
+	{ numeric::sign(t) } -> std::same_as<signed char>;
+	{ numeric::abs(t) } -> std::common_reference_with<const natural &>;
+};
+
+namespace detail
+{
+template <typename T>
+concept has_member_numerator = requires (T t)
+{
+	 { t.numerator() } -> integer_like;
 };
 
 template <typename T>
-concept unsigned_integral = std::integral<T> && (numeric::sign(T{}) > 0);
-
-template <typename T>
-concept rationalisable = integral<T> || std::is_same_v<T, rational>;
+concept has_member_denominator = requires (T t)
+{
+	 { t.denominator() } -> std::common_reference_with<const natural &>;
+};
+}
 }
