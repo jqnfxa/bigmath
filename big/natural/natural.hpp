@@ -18,9 +18,9 @@ public:
 	using digits_type = std::vector<digit_type>;
 	using size_type = std::size_t;
 
-	static constexpr digit_type number_system_base = 1'000'000'000;
-	static constexpr std::uint8_t bits_per_num = 9;
-
+	static constexpr const digit_type number_system_base = 1'000'000'000;
+	static constexpr const std::uint8_t bits_per_num = 9;
+	static constexpr const std::uint8_t karatsuba_threshold = 32;
 private:
 	digits_type digits_;
 
@@ -33,7 +33,7 @@ private:
 			return;
 		}
 
-		auto last = ranges::find_if_not(digits_ | std::views::reverse, [](const auto &digit) { return digit == 0; });
+		const auto &last = ranges::find_if_not(digits_ | std::views::reverse, [](const auto &digit) { return digit == 0; });
 		if (last == ranges::rend(digits_))
 		{
 			nullify();
@@ -46,7 +46,7 @@ private:
 
 	constexpr void nullify() &
 	{
-		if (digits_.size() != 1)
+		if (std::ranges::size(digits_) != 1)
 		{
 			digits_.resize(1);
 		}
@@ -56,7 +56,7 @@ private:
 
 	constexpr void add_digit(digit_type digit, size_type position) &
 	{
-		const auto size = std::ranges::size(digits_);
+		const auto &size = std::ranges::size(digits_);
 		if (position > size)
 		{
 			throw std::out_of_range(std::to_string(position) + " is out of range");
@@ -83,7 +83,7 @@ private:
 
 	constexpr void sub_digit(digit_type digit, size_type position) &
 	{
-		const auto size = std::ranges::size(digits_);
+		const auto &size = std::ranges::size(digits_);
 		if (position >= size)
 		{
 			throw std::out_of_range(std::to_string(position) + " is out of range");
@@ -149,6 +149,129 @@ private:
 
 		return quotient;
 	}
+
+	natural &multiply_by_digit(const digit_type digit)
+	{
+		std::uintmax_t carry = 0, mul = 0, exteded_digit = digit;
+
+		for (auto &num_digit : digits_)
+		{
+			mul = exteded_digit * num_digit + carry;
+			num_digit = mul % number_system_base;
+			carry = mul / number_system_base;
+		}
+
+		if (carry != 0)
+		{
+			digits_.push_back(carry);
+		}
+
+		return *this;
+	}
+
+	natural school_grade_mul(const natural &num1, const natural &num2) &
+	{
+		if (std::ranges::size(num1.digits_) < std::ranges::size(num2.digits_))
+		{
+			return school_grade_mul(num2, num1);
+		}
+
+		if (num1.is_zero() || num2.is_zero())
+		{
+			nullify();
+			return *this;
+		}
+
+		if (std::ranges::size(num2.digits_) == 1)
+		{
+			natural result(num1);
+			return result.multiply_by_digit(num2.digits_.front());
+		}
+
+		const auto &this_size = std::ranges::size(num1.digits_);
+		const auto &other_size = std::ranges::size(num2.digits_);
+
+		natural result{};
+		result.digits_.resize(this_size + other_size);
+
+		for (size_type i = 0; i < this_size; ++i)
+		{
+			for (size_type j = 0; j < other_size; ++j)
+			{
+				std::uintmax_t product = num1.digits_[i];
+				product *= num2.digits_[j];
+				product += result.digits_[i + j];
+
+				if (product >= number_system_base)
+				{
+					result.add_digit(product / number_system_base, i + j + 1);
+				}
+
+				result.digits_[i + j] = product % number_system_base;
+			}
+		}
+
+		result.erase_leading_zeroes();
+		return result;
+	}
+
+	std::pair<natural, natural> split_at(size_type pos) const
+	{
+		if (pos <= std::ranges::size(digits_))
+		{
+			digits_type high(std::ranges::size(digits_) - pos);
+			digits_type low(pos);
+
+			for (size_type i = 0; i < high.size(); ++i)
+			{
+				high[i] = digits_[i + pos];
+			}
+
+			for (size_type i = 0; i < low.size(); ++i)
+			{
+				low[i] = digits_[i];
+			}
+
+			return {natural(std::move(high)), natural(std::move(low))};
+		}
+
+		return {natural(0), *this};
+	}
+
+	natural karatsuba(const natural &num1, const natural &num2)
+	{
+		const auto &size1 = std::ranges::size(num1.digits_);
+		const auto &size2 = std::ranges::size(num2.digits_);
+
+		if (size1 < karatsuba_threshold || size2 < karatsuba_threshold)
+		{
+			return school_grade_mul(num1, num2);
+		}
+
+		const auto &m = std::max(size1, size2);
+   		const auto &m2 = m / 2;
+
+		auto &&[high1, low1] = num1.split_at(m2);
+		auto &&[high2, low2] = num2.split_at(m2);
+
+		natural &&z0 = karatsuba(low1, low2);
+		natural z2 = karatsuba(high1, high2);
+
+		low1 += high1;
+		low2 += high2;
+
+		natural &&z1 = karatsuba(low1, low2);
+
+		z1 -= z2;
+		z1 -= z0;
+		z1 <<= m2;
+		z2 <<= 2 * m2;
+
+		z2 += z1;
+		z2 += z0;
+
+		return z2;
+	}
 public:
 	[[nodiscard]] constexpr natural(const digits_type &digits = {})
 	{
@@ -165,6 +288,24 @@ public:
 		}
 
 		digits_ = digits;
+		erase_leading_zeroes();
+	}
+
+	[[nodiscard]] constexpr natural(digits_type &&digits)
+	{
+		const auto &is_invalid_digit = [this](const auto &digit)
+		{
+			return digit >= number_system_base;
+		};
+
+		if (std::ranges::any_of(digits, is_invalid_digit))
+		{
+			throw std::invalid_argument(
+				"an invalid number, one or more digits cannot be represented in the number system "
+				+ std::to_string(number_system_base));
+		}
+
+		digits_ = std::move(digits);
 		erase_leading_zeroes();
 	}
 
@@ -191,7 +332,7 @@ public:
 
 	[[nodiscard]] constexpr bool is_even() const noexcept
 	{
-		return (digits_[0] & 1) == 0;
+		return !(digits_[0] & 1);
 	}
 
 	[[nodiscard]] constexpr bool is_zero() const noexcept
@@ -341,43 +482,7 @@ public:
 
 	constexpr natural &operator*=(const natural &other) &
 	{
-		if (is_zero() || other.is_zero())
-		{
-			nullify();
-			return *this;
-		}
-
-		if (other == 1)
-		{
-			return *this;
-		}
-
-		const auto this_size = std::ranges::size(digits_);
-		const auto other_size = std::ranges::size(other.digits_);
-
-		natural result{};
-		result.digits_.resize(this_size + other_size, 0);
-
-		for (size_type i = 0; i < this_size; ++i)
-		{
-			for (size_type j = 0; j < other_size; ++j)
-			{
-				std::uintmax_t product = digits_[i];
-				product *= other.digits_[j];
-				product += result.digits_[i + j];
-
-				if (product >= number_system_base)
-				{
-					result.add_digit(product / number_system_base, i + j + 1);
-				}
-
-				result.digits_[i + j] = product % number_system_base;
-			}
-		}
-
-		result.erase_leading_zeroes();
-		digits_ = std::move(result.digits_);
-
+		*this = karatsuba(*this, other);
 		return *this;
 	}
 
