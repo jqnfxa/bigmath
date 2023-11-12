@@ -16,7 +16,7 @@ include_directories(big/)
 
 # source files
 file(GLOB_RECURSE SOURCES "big/*.cpp")
-add_executable(MathModule_run ${SOURCES})
+add_executable(MathModule_run ${SOURCES} main.cpp)
 
 # test files
 add_executable(MathModule_test 	big/algorithm/algorithm.hpp

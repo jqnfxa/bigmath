@@ -29,18 +29,7 @@ namespace big
 			denominator_ /= coefficient;
 		}
 	public:
-		rational()  noexcept : rational(0)
-		{}
-
-		template <numeric::rational::rationalisable T>
-		[[nodiscard]] constexpr rational(const T &other) noexcept
-			: numerator_(std::move(numeric::rational::numerator(other)))
-			, denominator_(std::move(numeric::rational::denominator(other)))
-		{
-			simplify_fraction();
-		}
-
-		template <traits::integer_like T, traits::integer_like U>
+		template <traits::integer_like T = std::intmax_t, traits::integer_like U = std::uintmax_t>
 		[[nodiscard]] constexpr rational(const T &numerator = 0, const U &denominator = 1)
 			: numerator_(numeric::abs(numerator), numeric::sign_bit(numerator) ^ numeric::sign_bit(denominator))
 			, denominator_(numeric::abs(denominator))
@@ -49,15 +38,15 @@ namespace big
 			simplify_fraction();
 		}
 
-		template <numeric::rational::rationalisable T>
+		template <traits::rational_like T>
 		[[nodiscard]] constexpr std::strong_ordering operator<=>(const T &other) const noexcept
 		{
-			const auto &first_numerator = numeric::rational::numerator(*this) * numeric::rational::denominator(other);
-			const auto &second_numerator = numeric::rational::numerator(other) * numeric::rational::denominator(*this);
+			const auto first_numerator = integer(numeric::rational::numerator(*this)) * numeric::rational::denominator(other);
+			const auto second_numerator = integer(numeric::rational::numerator(other)) * numeric::rational::denominator(*this);
 			return first_numerator <=> second_numerator;
 		}
 
-		template <numeric::rational::rationalisable T>
+		template <traits::rational_like T>
 		[[nodiscard]] constexpr bool operator==(const T &other) const noexcept
 		{
 			return *this <=> other == std::strong_ordering::equal;
@@ -108,7 +97,7 @@ namespace big
 			return rational(denominator_, numerator_);
 		}
 
-		template <numeric::rational::rationalisable T>
+		template <traits::rational_like T>
 		rational &operator+=(const T &other) & noexcept
 		{
 			numerator_ = numeric::rational::numerator(*this) * numeric::rational::denominator(other) + numeric::rational::numerator(other) * numeric::rational::denominator(*this);
@@ -118,7 +107,7 @@ namespace big
 			return *this;
 		}
 
-		template <numeric::rational::rationalisable T>
+		template <traits::rational_like T>
 		rational &operator-=(const T &other) & noexcept
 		{
 			flip_sign();
@@ -128,7 +117,7 @@ namespace big
 			return *this;
 		}
 
-		template <numeric::rational::rationalisable T>
+		template <traits::rational_like T>
 		rational &operator*=(const T &other) & noexcept
 		{
 			numerator_ *= numeric::rational::numerator(other);
@@ -138,14 +127,14 @@ namespace big
 			return *this;
 		}
 
-		template <numeric::rational::rationalisable T>
+		template <traits::rational_like T>
 		rational &operator/=(const T &other) &
 		{
 			if (numeric::sign_bit(other))
 			{
 				flip_sign();
 			}
-			
+
 			numerator_ *= numeric::rational::denominator(other);
 			denominator_ *= numeric::abs(numeric::rational::numerator(other));
 			throw_if_denominator_is_zero();
@@ -154,7 +143,7 @@ namespace big
 			return *this;
 		}
 
-		template <numeric::rational::rationalisable T>
+		template <traits::rational_like T>
 		rational operator+(const T &other) const & noexcept
 		{
 			rational temp(*this);
@@ -162,7 +151,7 @@ namespace big
 			return temp;
 		}
 
-                template <numeric::rational::rationalisable T>
+		template <traits::rational_like T>
 		rational operator-(const T &other) const & noexcept
 		{
 			rational temp(*this);
@@ -170,7 +159,7 @@ namespace big
 			return temp;
 		}
 
-		template <numeric::rational::rationalisable T>
+		template <traits::rational_like T>
 		rational operator*(const T &other) const & noexcept
 		{
 			rational temp(*this);
@@ -178,7 +167,7 @@ namespace big
 			return temp;
 		}
 
-		template <numeric::rational::rationalisable T>
+		template <traits::rational_like T>
 		rational operator/(const T &other) const &
 		{
 			rational temp(*this);

@@ -9,7 +9,7 @@
 
 namespace big
 {
-template <numeric::rational::algebraic T>
+template <traits::polynomial_like T>
 [[nodiscard]] constexpr T gcd(const T &a, const T &b) noexcept
 {
 	if (a < b)
@@ -28,7 +28,7 @@ template <numeric::rational::algebraic T>
 	return first;
 }
 
-template <numeric::rational::algebraic T>
+template <traits::polynomial_like T>
 [[nodiscard]] constexpr T lcm(const T &a, const T &b)
 {
 	T result = a * b;
@@ -36,10 +36,10 @@ template <numeric::rational::algebraic T>
 	return result;
 }
 
-template <numeric::rational::algebraic T, traits::integer_like U>
+template <traits::polynomial_like T, traits::integer_like U>
 [[nodiscard]] constexpr T pow(T object, U power_base) noexcept
 {
-	T result = numeric::common_object(object);
+	auto result = numeric::multiplicative_identity<T>();
 
 	if (numeric::sign(power_base) < 0)
 	{

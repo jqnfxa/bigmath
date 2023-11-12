@@ -1,7 +1,7 @@
 #include <ranges>
 #include <sstream>
 #include "integer.hpp"
-#include "numeric/numeric.hpp"
+#include "../numeric/numeric.hpp"
 
 
 namespace big

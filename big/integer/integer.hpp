@@ -1,8 +1,7 @@
 #pragma once
 
 #include "../natural/natural.hpp"
-#include "../traits/traits.hpp"
-
+#include "../traits/integer.hpp"
 
 namespace big
 {
@@ -39,7 +38,7 @@ class integer
 	}
 
 public:
-	template <traits::integer_like T>
+	template <traits::integer_like T = std::intmax_t>
 	[[nodiscard]] constexpr integer(T num = 0) noexcept
 		: sign_bit_(numeric::sign_bit(num))
 		, abs_(numeric::abs(num))
@@ -59,7 +58,7 @@ public:
 	[[nodiscard]] constexpr std::strong_ordering operator<=>(const T &other) const noexcept
 	{
 		const auto other_sign_bit = numeric::sign_bit(other);
-		
+
 		if (sign_bit_ ^ other_sign_bit)
 		{
 			return sign_bit_ && !other_sign_bit ? std::strong_ordering::less : std::strong_ordering::greater;
@@ -161,7 +160,7 @@ public:
 	{
 		abs_ %= numeric::abs(other);
 		normalize();
-		
+
 		return *this;
 	}
 

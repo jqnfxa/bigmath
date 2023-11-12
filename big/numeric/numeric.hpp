@@ -1,7 +1,7 @@
 #pragma once
 
 #include <type_traits>
-#include "../natural/natural.hpp"
+#include "../traits/natural.hpp"
 
 
 namespace big::numeric
@@ -11,7 +11,7 @@ namespace detail
 template <typename T>
 concept member_abs = requires (T t)
 {
-	{ t.abs() } -> std::common_reference_with<const natural &>;
+	{ t.abs() } -> traits::natural_like;
 };
 
 template <typename T>
@@ -21,23 +21,25 @@ concept member_sign_bit = requires (T t)
 };
 
 template <typename T>
-concept member_has_x = requires (T t)
+concept member_is_zero = requires (T t)
 {
-	{ t.major_coefficient().sign_bit() } -> std::same_as<bool>;
+	{ t.is_zero() } -> std::same_as<bool>;
 };
 }
 
 template <typename T>
 [[nodiscard]] constexpr bool sign_bit(const T &val) noexcept
 {
-	if constexpr (std::same_as<T, natural>)
+	if constexpr (traits::natural_like<T>)
 	{
 		return false;
 	}
+	else
 	if constexpr (detail::member_sign_bit<T>)
 	{
 		return val.sign_bit();
 	}
+	else
 	if constexpr (std::integral<T>)
 	{
 		return val < T{};
@@ -53,17 +55,46 @@ template <typename T>
 template <typename T>
 [[nodiscard]] constexpr decltype(auto) abs(const T &val) noexcept
 {
-	if constexpr (std::same_as<T, natural>)
+	if constexpr (traits::natural_like<T>)
 	{
 		return val;
 	}
+	else
 	if constexpr (detail::member_abs<T>)
 	{
 		return val.abs();
 	}
+	else
 	if constexpr (std::integral<T>)
 	{
 		return natural(val);
+	}
+}
+
+template <typename T>
+[[nodiscard]] constexpr bool is_zero(const T &val) noexcept
+{
+	if constexpr (detail::member_is_zero<T>)
+	{
+		return val.is_zero();
+	}
+	else
+	{
+		return val == T{};
+	}
+}
+
+// TODO: proper concepts
+template <typename T>
+[[nodiscard]] constexpr T multiplicative_identity() noexcept
+{
+	if constexpr (requires (T t) { { t.major_coefficient() }; })
+	{
+		return T{{1}};
+	}
+	else
+	{
+		return T{1};
 	}
 }
 
@@ -71,32 +102,8 @@ template <typename T, typename U>
 [[nodiscard]] constexpr auto distance(const T &a, const U &b) noexcept
 {
 	const auto order = a <=> b;
-	return order == std::strong_ordering::equal ? 0 : order > 0 ? a - b : b - a;
-}
-
-template <typename T>
-[[nodiscard]] constexpr bool is_zero(const T &val) noexcept
-{
-	if constexpr (detail::member_has_x<T> || std::same_as<T, natural> || detail::member_sign_bit<T>)
-	{
-		return val.is_zero();
-	}
-	if constexpr (std::integral<T>)
-	{
-		return val == 0;
-	}
-}
-
-template <typename T>
-[[nodiscard]] constexpr T common_object(const T &val) noexcept
-{
-	if constexpr (numeric::detail::member_has_x<T>)
-	{
-		return T{{1}};
-	}
-	else 
-	{
-		return T{1};
-	}
+	const auto a_abs = numeric::abs(a);
+	const auto b_abs = numeric::abs(b);
+	return order == std::strong_ordering::equal ? T{} : order > 0 ? a_abs - b_abs : b_abs - a_abs;
 }
 }

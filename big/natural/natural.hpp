@@ -106,7 +106,7 @@ private:
 	}
 
 	// Since the method is private, it is not necessary to check division by 0.
-	// This method is helper function for long_div and should used to find the quotient 
+	// This method is helper function for long_div and should used to find the quotient
 	// only when first > second
         constexpr natural find_quotient(const natural &first, const natural &second) const &
 	{
@@ -132,9 +132,8 @@ private:
 			while (low < high)
 			{
 				const auto mid = (low + high + 1) / 2;
-				natural temp = second * mid;
 
-				if (temp > first)
+				if (second * natural(mid) > first)
 				{
 					high = mid - 1;
 				}
@@ -215,7 +214,7 @@ private:
 		return result;
 	}
 
-	std::pair<natural, natural> split_at(size_type pos) const
+	constexpr std::pair<natural, natural> split_at(size_type pos) const
 	{
 		if (pos <= std::ranges::size(digits_))
 		{
@@ -238,7 +237,7 @@ private:
 		return {natural(0), *this};
 	}
 
-	natural karatsuba(const natural &num1, const natural &num2)
+	constexpr natural karatsuba(const natural &num1, const natural &num2)
 	{
 		const auto &size1 = std::ranges::size(num1.digits_);
 		const auto &size2 = std::ranges::size(num2.digits_);
@@ -371,7 +370,7 @@ public:
 			quotient <<= 1;
 			quotient += x;
 
-			remainder -= divisor * x;
+			remainder -= x * divisor;
 		}
 
 		quotient.erase_leading_zeroes();
@@ -593,5 +592,17 @@ public:
 
 	[[nodiscard]] std::string str() const;
 	friend std::ostream &operator<<(std::ostream &out, const natural &num);
+
+	template <std::integral T>
+	[[nodiscard]] operator T() const & noexcept
+	{
+		T ret{};
+		for (const auto &digit : digits_)
+		{
+			ret += static_cast<T>(digit);
+		}
+
+		return ret;
+	}
 };
 }

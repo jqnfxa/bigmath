@@ -1,48 +1,56 @@
 #pragma once
 
-#include "../traits/traits.hpp"
-#include "../integer/integer.hpp"
+#include "../numeric/numeric.hpp"
+#include "../traits/integer.hpp"
 
 
 namespace big::numeric::rational
 {
-template <typename T>
-[[nodiscard]] constexpr decltype (auto) numerator(const T &val) noexcept
+namespace detail
 {
-	if constexpr (traits::detail::has_member_numerator<T>)
+template <typename T>
+concept member_numerator = requires (T t)
+{
+	 { t.numerator() } -> traits::integer_like;
+};
+
+template <typename T>
+concept member_denominator = requires (T t)
+{
+	 { t.denominator() } -> traits::natural_like;
+};
+}
+
+template <typename T>
+[[nodiscard]] constexpr decltype(auto) numerator(const T &val) noexcept
+{
+	if constexpr (detail::member_numerator<T>)
 	{
 		return val.numerator();
 	}
+	else
+	if constexpr (traits::integer_like<T>)
+	{
+		return val;
+	}
+	else
 	if constexpr (std::integral<T>)
 	{
 		return integer(val);
 	}
-	if constexpr (!std::integral<T> && traits::integer_like<T>)
-	{
-		return val;
-	}
 }
 
 template <typename T>
-[[nodiscard]] constexpr decltype (auto) denominator(const T &val) noexcept
+[[nodiscard]] constexpr decltype(auto) denominator(const T &val) noexcept
 {
-	if constexpr (traits::detail::has_member_denominator<T>)
+	if constexpr (detail::member_denominator<T>)
 	{
 		return val.denominator();
 	}
-	if constexpr (std::integral<T> || traits::integer_like<T>)
+	else
+	if constexpr (traits::integer_like<T>)
 	{
 		return natural(1);
 	}
 }
-
-template <typename T>
-concept rationalisable = requires (T t)
-{
-	numerator(t);
-	denominator(t);
-};
-
-template <typename T>
-concept algebraic = rationalisable<T> || numeric::detail::member_has_x<T>;
 }

@@ -47,7 +47,7 @@ namespace big
 		{
 			return *this <=> other == std::strong_ordering::equal;
 		}
-		
+
 		[[nodiscard]] polynomial derivative() const & noexcept;
 		[[nodiscard]] polynomial normalize() const & noexcept;
 		void normalize() & noexcept;
@@ -77,7 +77,6 @@ namespace big
 		[[nodiscard]] polynomial operator%(const polynomial &other) const;
 		[[nodiscard]] polynomial operator<<(size_type shift) const;
 
-		
 		[[nodiscard]] std::string to_str() const;
 		friend std::ostream &operator<<(std::ostream &os, const polynomial &polynomial);
 
@@ -85,7 +84,7 @@ namespace big
 		[[nodiscard]] std::pair<polynomial, polynomial> long_div(const polynomial &divisor) const &;
 
 
-		template <numeric::rational::rationalisable T>
+		template <traits::rational_like T>
 		polynomial &operator*=(const T &scalar) & noexcept
 		{
 			for (auto &coefficient : coefficients_)
@@ -97,7 +96,7 @@ namespace big
 			return *this;
 		}
 
-		template <numeric::rational::rationalisable T>
+		template <traits::rational_like T>
 		polynomial &operator/=(const T &scalar) &
 		{
 			for (auto &coefficient : coefficients_)
@@ -109,7 +108,7 @@ namespace big
 			return *this;
 		}
 
-		template <numeric::rational::rationalisable T>
+		template <traits::rational_like T>
 		polynomial operator*(const T &scalar) noexcept
 		{
 			polynomial result(*this);
@@ -117,7 +116,7 @@ namespace big
                         return result;
 		}
 
-		template <numeric::rational::rationalisable T>
+		template <traits::rational_like T>
 		polynomial operator/(const T &scalar)
 		{
 			polynomial result(*this);

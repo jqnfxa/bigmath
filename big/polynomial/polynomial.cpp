@@ -6,7 +6,7 @@
 namespace big
 {
 	polynomial::polynomial() noexcept
-		: coefficients_(1, rational(0))
+		: coefficients_(1, rational{})
 	{
 	}
 
@@ -16,7 +16,7 @@ namespace big
 		{
 			throw std::invalid_argument("coefficients cannot be empty");
 		}
-		
+
 		coefficients_.assign(std::ranges::rbegin(coefficients), std::ranges::rend(coefficients));
 		shrink_to_fit();
 	}
@@ -32,7 +32,7 @@ namespace big
 	polynomial polynomial::derivative() const & noexcept
 	{
 		polynomial temp(*this);
-		temp.coefficients_.at(0) = rational(0);
+		temp.coefficients_.at(0) = rational{};
 
 		for (size_type i = 1; i < std::ranges::size(temp.coefficients_); ++i)
 		{
@@ -232,7 +232,7 @@ namespace big
                 ss << *this;
                 return ss.str();
 	}
-	
+
 	std::ostream &operator<<(std::ostream &os, const polynomial &polynomial)
 	{
 		for (polynomial::size_type i = 0; i < polynomial.coefficients().size(); ++i)
