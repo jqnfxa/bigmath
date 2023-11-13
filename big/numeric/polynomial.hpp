@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../traits/rational.hpp"
+#include <utility>
 
 
 namespace big::numeric::polynomial
@@ -16,7 +17,7 @@ concept member_coefficients = requires (T t)
 template <typename T>
 concept member_at = requires (T t, std::size_t pos)
 {
-	{ t.at(pos) };
+	{ t.at(pos) } -> traits::rational_like;
 };
 
 template <typename T>
@@ -41,7 +42,7 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] constexpr decltype(auto) coefficient_at(const T &val, std::size_t pos) noexcept
+[[nodiscard]] constexpr decltype(auto) coefficient_at(T &val, std::size_t pos) noexcept
 {
 	if constexpr (detail::member_at<T>)
 	{
@@ -62,5 +63,11 @@ template <typename T>
 
 		return T{};
 	}
+}
+
+template <typename T>
+[[nodiscard]] constexpr decltype(auto) coefficient_at(const T &val, std::size_t pos) noexcept
+{
+	return std::as_const(coefficient_at(const_cast<T &>(val), pos));
 }
 }

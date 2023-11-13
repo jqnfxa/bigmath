@@ -21,8 +21,13 @@ add_executable(MathModule_run ${SOURCES} main.cpp)
 # test files
 add_executable(MathModule_test 	big/algorithm/algorithm.hpp
 				big/traits/traits.hpp
+				big/traits/integer.hpp
+				big/traits/natural.hpp
+				big/traits/polynomial.hpp
+				big/traits/rational.hpp
 				big/numeric/numeric.hpp
 				big/numeric/rational.hpp
+				big/numeric/polynomial.hpp
 				big/natural/natural.hpp 
 				big/natural/natural.cpp 
 				big/integer/integer.hpp 
