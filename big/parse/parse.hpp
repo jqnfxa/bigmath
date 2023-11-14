@@ -7,6 +7,10 @@
 
 #include "../traits/traits.hpp"
 #include "../algorithm/algorithm.hpp"
+#include "../natural/natural.hpp"
+#include "../integer/integer.hpp"
+#include "../rational/rational.hpp"
+#include "../natural/natural.hpp"
 
 
 namespace big::parse
@@ -99,21 +103,22 @@ enum class operator_precedence : unsigned char
 	switch (id)
 	{
 	case token_id::add:
-		return operator_precedence::low;
-
 	case token_id::sub:
 		return operator_precedence::lowest;
 
 	case token_id::mul:
-		return operator_precedence::medium;
-
 	case token_id::div:
+	case token_id::mod:
 		return operator_precedence::medium;
 
+	case token_id::shl:
+	case token_id::shr:
 	case token_id::pow:
 		return operator_precedence::high;
 
 	default:
+	case token_id::gcd:
+	case token_id::lcm:
 		return operator_precedence::highest;
 	}
 }
@@ -175,6 +180,21 @@ protected:
 		return {id, substr};
 	}
 
+	template <traits::rational_like T>
+        [[nodiscard]] std::size_t get_shift(const T &val) const 
+	{
+		if constexpr (traits::natural_like<T>)
+		{
+			return numeric::convert_to_common_type<T, std::size_t>(val);
+		}
+		else
+		if constexpr (std::unsigned_integral<std::remove_cvref_t<T>>)
+		{
+			return numeric::convert_to_common_type<T, std::size_t>(val);
+		}
+
+		throw std::invalid_argument("shift must be a natural");
+	}
 public:
 	[[nodiscard]] explicit expression(std::string_view expression)
 		: expression_(expression)
@@ -182,7 +202,7 @@ public:
 
 	[[nodiscard]] std::queue<token_info> parse()
 	{
-		std::queue<token_info> output;
+		std::queue<token_info> rpn;
 		std::stack<token_info> operators;
 
 		for (token_info token; (token = next()) != token_info{}; )
@@ -190,7 +210,7 @@ public:
 			switch (token.ident)
 			{
 			case token_id::integer_literal:
-				output.push(token);
+				rpn.push(token);
 				break;
 
 			case token_id::compound_end:
@@ -203,7 +223,7 @@ public:
 					}
 					else
 					{
-						output.push(op);
+						rpn.push(op);
 						operators.pop();
 					}
 				}
@@ -219,7 +239,7 @@ public:
 				{
 					if (const auto &op = operators.top(); detail::is_binary_operator(op.ident) && detail::precedence(op.ident) >= detail::precedence(token.ident))
 					{
-						output.push(op);
+						rpn.push(op);
 						operators.pop();
 					}
 					else
@@ -235,11 +255,11 @@ public:
 
 		while (!operators.empty())
 		{
-			output.push(operators.top());
+			rpn.push(operators.top());
 			operators.pop();
 		}
 
-		return output;
+		return rpn;
 	}
 
 	template <traits::rational_like T>
@@ -248,7 +268,7 @@ public:
 		auto tokens = parse();
 		std::stack<T> values;
 
-		const auto evaluate_operation = [&values](token_id ident)
+		const auto evaluate_operation = [this, &values] (token_id ident)
 		{
 			const T rhs = values.top();
 			values.pop();
@@ -274,7 +294,7 @@ public:
 				break;
 
 			case token_id::pow:
-				lhs = pow(lhs, rhs);
+				lhs = big::pow(lhs, numeric::rational::numerator(rhs));
 				break;
 
 			case token_id::mod:
@@ -290,11 +310,11 @@ public:
 				break;
 
 			case token_id::shl:
-				lhs <<= static_cast<std::size_t>(rhs);
+				lhs <<= get_shift(rhs);
 				break;
 
 			case token_id::shr:
-				lhs >>= static_cast<std::size_t>(rhs);
+				lhs >>= get_shift(rhs);
 				break;
 			}
 
@@ -305,7 +325,7 @@ public:
 		{
 			const auto &[ident, str] = tokens.front();
 
-			values.push(ident == token_id::integer_literal ? T(str) : evaluate_operation(ident));
+			values.push(ident == token_id::integer_literal ? natural(str) : evaluate_operation(ident));
 
 			tokens.pop();
 		}

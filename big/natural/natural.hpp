@@ -361,6 +361,7 @@ public:
 
 			if (remainder < divisor)
 			{
+				quotient <<= 1;
 				continue;
 			}
 
@@ -596,16 +597,17 @@ public:
 	[[nodiscard]] std::string str() const;
 	friend std::ostream &operator<<(std::ostream &out, const natural &num);
 
-	/*template <std::integral T>
-	[[nodiscard]] operator T() const & noexcept
+	template <std::integral T>
+	[[nodiscard]] T to_common_type(const T &type) const & noexcept
 	{
 		T ret{};
+
 		for (const auto &digit : digits_)
 		{
-			ret += static_cast<T>(digit);
+			ret = ret * number_system_base + static_cast<T>(digit);
 		}
 
 		return ret;
-	}*/
+	}
 };
 }

@@ -79,23 +79,7 @@ public:
 		return *this <=> other == std::strong_ordering::equal;
 	}
 
-	[[nodiscard]] constexpr polynomial derivative() const & noexcept
-	{
-		polynomial temp(*this);
-		numeric::polynomial::coefficient_at(temp, 0) *= 0;
-
-		for (size_type i = 1; i < std::ranges::size(temp.coefficients_); ++i)
-		{
-			numeric::polynomial::coefficient_at(temp, i - 1) = numeric::polynomial::coefficient_at(temp, i) * i;
-		}
-
-		if (numeric::polynomial::degree(temp) > 0)
-		{
-			temp.coefficients_.pop_back();
-		}
-
-		return temp;
-	}
+	[[nodiscard]] polynomial derivative() const & noexcept;
 
 	[[nodiscard]] polynomial normalize() const &;
 	void normalize() &;
