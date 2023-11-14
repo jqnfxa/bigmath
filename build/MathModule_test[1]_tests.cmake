@@ -1,0 +1,7 @@
+add_test([=[TestParserSuite.ParseNatural]=]  /home/shard/VSCode/MathModule/build/MathModule_test [==[--gtest_filter=TestParserSuite.ParseNatural]==] --gtest_also_run_disabled_tests)
+set_tests_properties([=[TestParserSuite.ParseNatural]=]  PROPERTIES WORKING_DIRECTORY /home/shard/VSCode/MathModule/build SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==])
+add_test([=[TestParserSuite.ParseInteger]=]  /home/shard/VSCode/MathModule/build/MathModule_test [==[--gtest_filter=TestParserSuite.ParseInteger]==] --gtest_also_run_disabled_tests)
+set_tests_properties([=[TestParserSuite.ParseInteger]=]  PROPERTIES WORKING_DIRECTORY /home/shard/VSCode/MathModule/build SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==])
+add_test([=[TestParserSuite.ParseRational]=]  /home/shard/VSCode/MathModule/build/MathModule_test [==[--gtest_filter=TestParserSuite.ParseRational]==] --gtest_also_run_disabled_tests)
+set_tests_properties([=[TestParserSuite.ParseRational]=]  PROPERTIES WORKING_DIRECTORY /home/shard/VSCode/MathModule/build SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==])
+set(  MathModule_test_TESTS TestParserSuite.ParseNatural TestParserSuite.ParseInteger TestParserSuite.ParseRational)

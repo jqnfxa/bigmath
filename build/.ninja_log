@@ -1,0 +1,20 @@
+# ninja log v5
+4686	5025	1699993392147270431	/home/shard/VSCode/MathModule/build/MathModule_test[1]_tests.cmake	5c1e70be23b36f9d
+7	18256	1699989200917303501	CMakeFiles/MathModule_test.dir/test/TestNatural.cpp.o	97320a19fff67f70
+8	5228	1699989333870080155	CMakeFiles/MathModule_test.dir/test/main.cpp.o	804e3338b5ece2f1
+4246	22547	1699989205205328565	CMakeFiles/MathModule_test.dir/test/TestPolynomial.cpp.o	25208832d550436e
+4	5538	1699992967851275623	CMakeFiles/MathModule_test.dir/big/polynomial/polynomial.cpp.o	bc7a5e4ec4700518
+4686	5025	1699993392147270431	MathModule_test[1]_tests.cmake	5c1e70be23b36f9d
+4	2952	1699992988231394363	CMakeFiles/MathModule_test.dir/big/rational/rational.cpp.o	d250de8db2bfe793
+3	4853	1699989333494077959	CMakeFiles/MathModule_test.dir/big/natural/natural.cpp.o	966fe4b10de1fd6f
+3	4686	1699993391807269943	CMakeFiles/MathModule_test.dir/test/TestExpressionParser.cpp.o	262cbfacf18ea983
+4026	20319	1699989202977315543	CMakeFiles/MathModule_test.dir/test/TestRational.cpp.o	3bf7f797df0ea6c5
+4686	5025	1699993392147270431	MathModule_test	5c1e70be23b36f9d
+17	16898	1699989199557295553	CMakeFiles/MathModule_test.dir/test/TestInteger.cpp.o	d00f869f0afd75eb
+3	3582	1699989332222070532	CMakeFiles/MathModule_test.dir/big/integer/integer.cpp.o	9732b0fdbbc32359
+0	65	1699989324742026855	build.ninja	bf4fa8d27610615c
+5267	23053	1699989205713331534	CMakeFiles/MathModule_test.dir/test/TestAlgorithms.cpp.o	82bb225f4b8e5b57
+4	4358	1699993707299998676	CMakeFiles/MathModule_test.dir/test/TestExpressionParser.cpp.o	262cbfacf18ea983
+4358	4656	1699993707599999582	MathModule_test	5c1e70be23b36f9d
+4358	4656	1699993707599999582	MathModule_test[1]_tests.cmake	5c1e70be23b36f9d
+4358	4656	1699993707599999582	/home/shard/VSCode/MathModule/build/MathModule_test[1]_tests.cmake	5c1e70be23b36f9d

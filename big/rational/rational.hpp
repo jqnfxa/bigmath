@@ -143,6 +143,9 @@ namespace big
 			return *this;
 		}
 
+		rational &operator<<=(std::size_t shift) &;
+		rational &operator>>=(std::size_t shift) &;
+
 		template <traits::rational_like T>
 		rational &operator%=(const T &other) &
 		{
@@ -189,6 +192,9 @@ namespace big
 			temp %= other;
 			return temp;
 		}
+
+		rational operator<<(std::size_t shift) const &;
+		rational operator>>(std::size_t shift) const &;
 
 		[[nodiscard]] std::string str() const;
 		friend std::ostream &operator<<(std::ostream &out, const rational &num);

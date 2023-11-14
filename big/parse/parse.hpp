@@ -22,6 +22,7 @@ enum class token_id
 	sub,
 	mul,
 	div,
+	pow,
 	mod,
 	gcd,
 	lcm,
@@ -48,6 +49,7 @@ const std::map<token_id, std::string_view> tokens{
 	{token_id::sub, "-"},
 	{token_id::mul, "*"},
 	{token_id::div, "/"},
+	{token_id::pow, "^"},
 	{token_id::mod, "mod"},
 	{token_id::gcd, "gcd"},
 	{token_id::lcm, "lcm"},
@@ -99,6 +101,29 @@ const std::map<token_id, std::string_view> tokens{
 
 	return token_id::none;
 }
+
+[[nodiscard]] std::uint8_t precedence(token_id id) noexcept
+{
+	switch (id) 
+	{
+        case token_id::add:
+        case token_id::sub:
+        	return 1;
+        case token_id::mul:
+        case token_id::div:
+        case token_id::mod:
+		return 2;
+        case token_id::shl:
+        case token_id::shr:
+	case token_id::pow:
+		return 3;
+	case token_id::gcd:
+	case token_id::lcm:
+		return 4;
+        default:
+               return 0;
+       }
+}
 }
 
 class expression
@@ -142,7 +167,7 @@ protected:
 	template <traits::rational_like T>
         [[nodiscard]] std::size_t get_shift(const T &val) const 
 	{
-		if constexpr (std::is_same_v<std::remove_cvref_t<T>, natural>)
+		if constexpr (traits::natural_like<T>)
 		{
 			return numeric::convert_to_common_type<T, std::size_t>(val);
 		}
@@ -161,67 +186,53 @@ public:
 
 	[[nodiscard]] std::queue<token_info> parse()
 	{
-		std::queue<token_info> output;
-		std::stack<token_info> operators;
+		std::queue<token_info> rpn;
+		std::stack<token_info> operator_stack;
 
-		for (token_info token; (token = next()) != token_info{}; )
+		token_info token = next();
+		while (token.ident != token_id::none)
 		{
-			switch (token.ident)
+			if (detail::is_binary_operator(token.ident))
 			{
-			case token_id::integer_literal:
-				output.push(token);
-				break;
-
-			case token_id::compound_end:
-				while (!operators.empty())
+				while (!operator_stack.empty() && detail::is_binary_operator(operator_stack.top().ident) &&
+					detail::precedence(token.ident) <= detail::precedence(operator_stack.top().ident))
 				{
-					if (const auto &op = operators.top(); op.ident == token_id::compound_begin)
-					{
-						operators.pop();
-						break;
-					}
-					else
-					{
-						output.push(op);
-						operators.pop();
-					}
+					rpn.push(operator_stack.top());
+					operator_stack.pop();
 				}
-
-				break;
-
-			case token_id::compound_begin:
-				operators.push(token);
-				break;
-
-			default:
-				if (detail::is_additive_operator(token.ident))
-				{
-					while (!operators.empty())
-					{
-						if (const auto &op = operators.top(); !detail::is_multiplicative_operator(op.ident))
-						{
-							break;
-						}
-						else
-						{
-							output.push(op);
-							operators.pop();
-						}
-					}
-				}
-
-				operators.push(token);
-				break;
+				operator_stack.push(token);
 			}
+			else 
+			if (token.ident == token_id::compound_begin)
+			{
+				operator_stack.push(token);
+			}
+			else 
+			if (token.ident == token_id::compound_end)
+			{
+				while (operator_stack.top().ident != token_id::compound_begin)
+				{
+					rpn.push(operator_stack.top());
+					operator_stack.pop();
+				}
+
+				operator_stack.pop(); // Discard the '('
+			}
+			else
+			{
+				rpn.push(token);
+			}
+
+			token = next();
 		}
 
-		while (!operators.empty())
+		while (!operator_stack.empty())
 		{
-			output.push(operators.top());
-			operators.pop();
+			rpn.push(operator_stack.top());
+			operator_stack.pop();
 		}
 
-		return output;
+		return rpn;
 	}
 
 	template <traits::rational_like T>
@@ -255,6 +266,10 @@ public:
 				lhs /= rhs;
 				break;
 
+			case token_id::pow:
+				lhs = big::pow(lhs, numeric::rational::numerator(rhs));
+				break;
+
 			case token_id::mod:
 				lhs %= rhs;
 				break;
@@ -283,7 +298,7 @@ public:
 		{
 			const auto &[ident, str] = tokens.front();
 
-			values.push(ident == token_id::integer_literal ? T(str) : evaluate_operation(ident));
+			values.push(ident == token_id::integer_literal ? natural(str) : evaluate_operation(ident));
 
 			tokens.pop();
 		}

@@ -1,0 +1,5 @@
+if(EXISTS "/home/shard/VSCode/MathModule/build/MathModule_test[1]_tests.cmake")
+  include("/home/shard/VSCode/MathModule/build/MathModule_test[1]_tests.cmake")
+else()
+  add_test(MathModule_test_NOT_BUILT MathModule_test_NOT_BUILT)
+endif()
