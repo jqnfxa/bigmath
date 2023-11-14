@@ -53,4 +53,11 @@ template <typename T>
 		return natural(1);
 	}
 }
+
+template <typename T>
+[[nodiscard]] constexpr bool is_integer(const T &val) noexcept
+{
+	const auto den = denominator(val);
+	return den == multiplicative_identity<decltype(den)>();
+}
 }

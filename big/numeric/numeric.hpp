@@ -84,21 +84,6 @@ template <typename T>
 	}
 }
 
-// TODO: proper to_common_type cast
-template <typename T, typename U>
-[[nodiscard]] constexpr bool convert_to_common_type(const T &val) noexcept
-{
-	if constexpr (traits::natural_like<T> && std::integral<U>)
-	{
-		return val.to_common_type(U{});
-	}
-	else
-	if constexpr (std::integral<T>)
-	{
-		return static_cast<U>(val);
-	}
-}
-
 // TODO: proper concepts
 template <typename T>
 [[nodiscard]] constexpr T multiplicative_identity() noexcept
@@ -113,12 +98,10 @@ template <typename T>
 	}
 }
 
-template <typename T, typename U>
-[[nodiscard]] constexpr auto distance(const T &a, const U &b) noexcept
+template <typename T>
+[[nodiscard]] constexpr auto distance(const T &a, const T &b) noexcept
 {
 	const auto order = a <=> b;
-	const auto a_abs = numeric::abs(a);
-	const auto b_abs = numeric::abs(b);
-	return order == std::strong_ordering::equal ? T{} : order > 0 ? a_abs - b_abs : b_abs - a_abs;
+	return order == std::strong_ordering::equal ? T{} : order > 0 ? a - b : b - a;
 }
 }

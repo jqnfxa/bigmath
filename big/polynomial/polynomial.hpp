@@ -3,32 +3,18 @@
 #include "../rational/rational.hpp"
 #include "../numeric/numeric.hpp"
 #include "../numeric/polynomial.hpp"
+#include "../algorithm/container.hpp"
+
 
 namespace big
 {
-class polynomial {
+class polynomial : public conv::stringifiable<integer>
+{
 	std::vector<rational> coefficients_;
 
-	// TODO: can be noexcept?
 	constexpr void erase_leading_zeroes() &
 	{
-		namespace ranges = std::ranges;
-
-		if (numeric::is_zero(*this))
-		{
-			return;
-		}
-
-		const auto &last = ranges::find_if_not(coefficients_ | std::views::reverse, [](const auto &coefficient) { return numeric::is_zero(coefficient); });
-		if (last == ranges::rend(coefficients_))
-		{
-			coefficients_.resize(1);
-			coefficients_.back() = 0;
-			return;
-		}
-
-		const auto &distance = ranges::distance(ranges::rbegin(coefficients_), last);
-		coefficients_.erase(ranges::next(ranges::begin(coefficients_), ranges::size(coefficients_) - distance), ranges::end(coefficients_));
+		return algorithm::erase_leading_up_to_last_if(coefficients_, numeric::is_zero<typename decltype(coefficients_)::value_type>);
 	}
 
 public:
@@ -69,7 +55,7 @@ public:
 		return std::ranges::size(coefficients_) - 1;
 	}
 
-	[[nodiscard]] constexpr std::strong_ordering operator<=>(const polynomial &other) const & noexcept		
+	[[nodiscard]] constexpr std::strong_ordering operator<=>(const polynomial &other) const & noexcept
 	{
 		return degree() <=> other.degree();
 	}
@@ -78,12 +64,6 @@ public:
 	{
 		return *this <=> other == std::strong_ordering::equal;
 	}
-
-	[[nodiscard]] polynomial derivative() const & noexcept;
-
-	[[nodiscard]] polynomial normalize() const &;
-	void normalize() &;
-	[[nodiscard]] polynomial multiple_roots_to_simple() const &;
 
 	[[nodiscard]] constexpr rational &at(size_type degree) &
 	{
@@ -110,27 +90,210 @@ public:
 		return at(degree);
 	}
 
-	polynomial &operator+=(const polynomial &other) & noexcept;
-	polynomial &operator-=(const polynomial &other) & noexcept;
-	polynomial &operator*=(const polynomial &other) & noexcept;
-	polynomial &operator/=(const polynomial &other) &;
-	polynomial &operator%=(const polynomial &other) &;
-	polynomial &operator<<=(size_type shift) &;
+	[[nodiscard]] constexpr polynomial derivative() const noexcept
+	{
+		polynomial der(*this);
+		numeric::polynomial::coefficient_at(der, 0) *= 0;
 
-	[[nodiscard]] polynomial operator+(const polynomial &other) const noexcept;
-	[[nodiscard]] polynomial operator-(const polynomial &other) const noexcept;
-	[[nodiscard]] polynomial operator*(const polynomial &other) const noexcept;
-	[[nodiscard]] polynomial operator/(const polynomial &other) const;
-	[[nodiscard]] polynomial operator%(const polynomial &other) const;
-	[[nodiscard]] polynomial operator<<(size_type shift) const;
+		for (size_type i = 1; i < std::ranges::size(der.coefficients_); ++i)
+		{
+			numeric::polynomial::coefficient_at(der, i - 1) = numeric::polynomial::coefficient_at(der, i) * i;
+		}
 
-	[[nodiscard]] std::string str() const;
-	friend std::ostream &operator<<(std::ostream &os, const polynomial &polynomial);
+		if (numeric::polynomial::degree(der) > 0)
+		{
+			der.coefficients_.pop_back();
+		}
 
-	[[nodiscard]] std::pair<polynomial, polynomial> long_div(const polynomial &divisor) const &;
+		return der;
+	}
+
+	constexpr polynomial normalized() const
+	{
+		polynomial tmp(*this);
+		tmp.normalize();
+		return tmp;
+	}
+
+	constexpr void normalize() &
+	{
+		auto scalar = numeric::polynomial::coefficient_at(*this, 0);
+
+		for (auto &coefficient : coefficients_)
+		{
+			scalar *= numeric::sign(coefficient);
+			scalar.numerator() = gcd(numeric::rational::numerator(scalar), numeric::rational::numerator(coefficient));
+			scalar.denominator() = lcm(numeric::rational::denominator(scalar), numeric::rational::denominator(coefficient));
+		}
+
+		*this /= scalar;
+	}
+
+	constexpr polynomial multiple_roots_to_simple() const &
+	{
+		polynomial tmp(*this);
+		tmp /= gcd(tmp, derivative());
+		tmp.normalize();
+		return tmp;
+	}
+
+	constexpr polynomial &operator+=(const polynomial &other) & noexcept
+	{
+		coefficients_.resize(std::ranges::max(numeric::polynomial::degree(*this), numeric::polynomial::degree(other)) + 1);
+
+		for (size_type i = 0; i < std::ranges::size(other.coefficients_); ++i)
+		{
+			numeric::polynomial::coefficient_at(*this, i) += numeric::polynomial::coefficient_at(other, i);
+		}
+
+		erase_leading_zeroes();
+		return *this;
+	}
+
+	constexpr polynomial &operator-=(const polynomial &other) & noexcept
+	{
+		*this *= -1;
+		*this += other;
+		*this *= -1;
+
+		return *this;
+	}
+
+	constexpr polynomial &operator*=(const polynomial &other) & noexcept
+	{
+		const auto &cur_len = std::ranges::size(coefficients_);
+		const auto &other_len = std::ranges::size(other.coefficients_);
+
+		std::vector<rational> result(cur_len + other_len - 1);
+
+		for (size_type i = 0; i < cur_len; ++i)
+		{
+			for (size_type j = 0; j < other_len; ++j)
+			{
+				numeric::polynomial::coefficient_at(result, i + j) += numeric::polynomial::coefficient_at(*this, i) * numeric::polynomial::coefficient_at(other, j);
+			}
+		}
+
+		coefficients_ = std::move(result);
+		erase_leading_zeroes();
+
+		return *this;
+	}
+
+	constexpr polynomial &operator/=(const polynomial &other) &
+	{
+		*this = long_div(other).first;
+		return *this;
+	}
+
+	constexpr polynomial &operator%=(const polynomial &other) &
+	{
+		*this = long_div(other).second;
+		return *this;
+	}
+
+	constexpr polynomial &operator<<=(size_type shift) &
+	{
+		const auto &size = std::ranges::size(coefficients_);
+
+		if (size > coefficients_.max_size() - shift)
+		{
+			throw std::length_error("impossible to perform shift without losing data");
+		}
+		if (shift == 0)
+		{
+			return *this;
+		}
+
+		coefficients_.resize(size + shift);
+
+		const auto rbegin = std::ranges::rbegin(coefficients_);
+		std::copy(std::next(rbegin, shift), coefficients_.rend(), rbegin);
+		std::fill_n(coefficients_.begin(), shift, rational{});
+
+		return *this;
+	}
+
+	[[nodiscard]] constexpr polynomial operator+(const polynomial &other) const noexcept
+	{
+		polynomial tmp(*this);
+		tmp += other;
+		return tmp;
+	}
+
+	[[nodiscard]] constexpr polynomial operator-(const polynomial &other) const noexcept
+	{
+		polynomial tmp(*this);
+		tmp -= other;
+		return tmp;
+	}
+
+	[[nodiscard]] constexpr polynomial operator*(const polynomial &other) const noexcept
+	{
+		polynomial tmp(*this);
+		tmp *= other;
+		return tmp;
+	}
+
+	[[nodiscard]] constexpr polynomial operator/(const polynomial &other) const
+	{
+		polynomial tmp(*this);
+		tmp /= other;
+		return tmp;
+	}
+
+	[[nodiscard]] constexpr polynomial operator%(const polynomial &other) const
+	{
+		polynomial tmp(*this);
+		tmp %= other;
+		return tmp;
+	}
+
+	[[nodiscard]] constexpr polynomial operator<<(size_type shift) const
+	{
+		polynomial tmp(*this);
+		tmp <<= shift;
+		return tmp;
+	}
+
+	[[nodiscard]] constexpr std::pair<polynomial, polynomial> long_div(const polynomial &divisor) const &
+	{
+		if (numeric::is_zero(numeric::polynomial::degree(divisor)) && numeric::is_zero(divisor.major_coefficient()))
+		{
+			throw std::logic_error("Cannot divide by 0");
+		}
+		if (numeric::polynomial::degree(divisor) > numeric::polynomial::degree(*this))
+		{
+			return {polynomial{}, *this};
+		}
+
+		polynomial remainder = *this;
+		polynomial quotient{};
+
+		quotient <<= numeric::polynomial::degree(remainder) - numeric::polynomial::degree(divisor);
+
+		while (numeric::polynomial::degree(remainder) >= numeric::polynomial::degree(divisor) && !numeric::is_zero(remainder.major_coefficient()))
+		{
+			const auto &new_coefficient = remainder.major_coefficient() / divisor.major_coefficient();
+			const auto &degree = numeric::polynomial::degree(remainder) - numeric::polynomial::degree(divisor);
+
+			numeric::polynomial::coefficient_at(quotient, degree) = new_coefficient;
+
+			polynomial subtract({new_coefficient});
+			subtract <<= degree;
+			subtract *= divisor;
+
+			remainder -= subtract;
+		}
+
+		quotient.erase_leading_zeroes();
+		remainder.erase_leading_zeroes();
+
+		return {quotient, remainder};
+	}
 
 	template <traits::rational_like T>
-	polynomial &operator*=(const T &scalar) & noexcept
+	constexpr polynomial &operator*=(const T &scalar) & noexcept
 	{
 		for (auto &coefficient : coefficients_)
 		{
@@ -142,7 +305,7 @@ public:
 	}
 
 	template <traits::rational_like T>
-	polynomial &operator/=(const T &scalar) &
+	constexpr polynomial &operator/=(const T &scalar) &
 	{
 		for (auto &coefficient : coefficients_)
 		{
@@ -154,7 +317,7 @@ public:
 	}
 
 	template <traits::rational_like T>
-	polynomial operator*(const T &scalar) noexcept
+	constexpr polynomial operator*(const T &scalar) noexcept
 	{
 		polynomial result(*this);
 		result *= scalar;
@@ -162,11 +325,13 @@ public:
 	}
 
 	template <traits::rational_like T>
-	polynomial operator/(const T &scalar)
+	constexpr polynomial operator/(const T &scalar)
 	{
 		polynomial result(*this);
 		result /= scalar;
 		return result;
 	}
+
+	friend std::ostream &operator<<(std::ostream &os, const polynomial &polynomial);
 };
 }

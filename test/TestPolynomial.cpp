@@ -278,7 +278,7 @@ TEST(PolynomialTestSuite, PolynomialFac)
 
 	{
 		std::vector<rational> p1 = {rational(9, 7u), rational(6, 11u), rational(3, 13u)};
-		polynomial cmp = polynomial(p1).normalize();
+		polynomial cmp = polynomial(p1).normalized();
 
 		std::vector<rational> exp = {rational(429), rational(182), rational(77)};
 		std::reverse(exp.begin(), exp.end());

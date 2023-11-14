@@ -39,7 +39,7 @@ natural::natural(std::string_view num)
 	for (size_type i = 0; i < total_chunks; ++i)
 	{
 		auto chunk = num.substr(offset, current_chunk_size);
-		
+
 		digit_type digit = std::strtoul(std::string(chunk.begin(), chunk.end()).data(), nullptr, 10);
 		digits_.insert(std::ranges::begin(digits_), digit);
 
@@ -48,13 +48,6 @@ natural::natural(std::string_view num)
 	}
 
 	erase_leading_zeroes();
-}
-
-std::string natural::str() const
-{
-	std::ostringstream stream;
-	stream << *this;
-	return stream.str();
 }
 
 std::ostream &operator<<(std::ostream &out, const natural &num)

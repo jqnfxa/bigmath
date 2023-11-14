@@ -16,40 +16,25 @@ include_directories(big/)
 
 # source files
 file(GLOB_RECURSE SOURCES "big/*.cpp")
-add_executable(MathModule_run ${SOURCES} main.cpp)
+add_executable(bignum ${SOURCES} main.cpp)
 
 # test files
-add_executable(MathModule_test 	big/algorithm/algorithm.hpp
-				big/traits/traits.hpp
-				big/traits/integer.hpp
-				big/traits/natural.hpp
-				big/traits/polynomial.hpp
-				big/traits/rational.hpp
-				big/numeric/numeric.hpp
-				big/numeric/rational.hpp
-				big/numeric/polynomial.hpp
-				big/natural/natural.hpp 
-				big/natural/natural.cpp 
-				big/integer/integer.hpp 
-				big/integer/integer.cpp 
-				big/rational/rational.hpp
-				big/rational/rational.cpp
-				big/polynomial/polynomial.hpp
-				big/polynomial/polynomial.cpp
-				big/parse/parse.hpp
-				big/parse/parse_polynomial.hpp
-				#test/TestNatural.cpp 
-				#test/TestInteger.cpp 
-				#test/TestRational.cpp
-				#test/TestPolynomial.cpp
-				#test/TestAlgorithms.cpp
-				test/TestExpressionParser.cpp 
-				test/main.cpp)
+add_executable(bignum_test big/natural/natural.cpp
+                           big/integer/integer.cpp
+			   big/rational/rational.cpp
+                           big/polynomial/polynomial.cpp
+                           test/TestNatural.cpp
+                           test/TestInteger.cpp
+                           test/TestRational.cpp
+                           test/TestPolynomial.cpp
+                           test/TestAlgorithms.cpp
+                           test/TestExpressionParser.cpp
+                           test/main.cpp)
 
 # Link GoogleTest to the test executable
-target_link_libraries(MathModule_test PRIVATE gtest GTest::GTest GTest::Main)
+target_link_libraries(bignum_test PRIVATE gtest GTest::GTest GTest::Main)
 
 # Include GoogleTest's CMake functions
 include(GoogleTest)
 
-gtest_discover_tests(MathModule_test)
+gtest_discover_tests(bignum_test)

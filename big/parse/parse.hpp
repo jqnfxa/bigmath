@@ -180,21 +180,6 @@ protected:
 		return {id, substr};
 	}
 
-	template <traits::rational_like T>
-        [[nodiscard]] std::size_t get_shift(const T &val) const 
-	{
-		if constexpr (traits::natural_like<T>)
-		{
-			return numeric::convert_to_common_type<T, std::size_t>(val);
-		}
-		else
-		if constexpr (std::unsigned_integral<std::remove_cvref_t<T>>)
-		{
-			return numeric::convert_to_common_type<T, std::size_t>(val);
-		}
-
-		throw std::invalid_argument("shift must be a natural");
-	}
 public:
 	[[nodiscard]] explicit expression(std::string_view expression)
 		: expression_(expression)
@@ -310,11 +295,11 @@ public:
 				break;
 
 			case token_id::shl:
-				lhs <<= get_shift(rhs);
+				lhs <<= static_cast<std::size_t>(rhs);
 				break;
 
 			case token_id::shr:
-				lhs >>= get_shift(rhs);
+				lhs >>= static_cast<std::size_t>(rhs);
 				break;
 			}
 

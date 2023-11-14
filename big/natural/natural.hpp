@@ -8,10 +8,13 @@
 #include <algorithm>
 #include <limits>
 
+#include "../algorithm/container.hpp"
+#include "../conv/stringifiable.hpp"
+
 
 namespace big
 {
-class natural
+class natural : public conv::stringifiable<natural>
 {
 public:
 	using digit_type = std::uint32_t;
@@ -26,22 +29,7 @@ private:
 
 	constexpr void erase_leading_zeroes() &
 	{
-		namespace ranges = std::ranges;
-
-		if (is_zero())
-		{
-			return;
-		}
-
-		const auto &last = ranges::find_if_not(digits_ | std::views::reverse, [](const auto &digit) { return digit == 0; });
-		if (last == ranges::rend(digits_))
-		{
-			nullify();
-			return;
-		}
-
-		const auto distance = ranges::distance(ranges::rbegin(digits_), last);
-		digits_.erase(ranges::next(ranges::begin(digits_), ranges::size(digits_) - distance), ranges::end(digits_));
+		return algorithm::erase_leading_up_to_last_if(digits_, [](const auto &digit) { return digit == 0; });
 	}
 
 	constexpr void nullify() &
@@ -108,7 +96,7 @@ private:
 	// Since the method is private, it is not necessary to check division by 0.
 	// This method is helper function for long_div and should used to find the quotient
 	// only when first > second
-        constexpr natural find_quotient(const natural &first, const natural &second) const &
+        [[nodiscard]] constexpr natural find_quotient(const natural &first, const natural &second) const &
 	{
 		natural quotient{};
 
@@ -149,7 +137,7 @@ private:
 		return quotient;
 	}
 
-	natural &multiply_by_digit(const digit_type digit)
+	[[nodiscard]] constexpr natural &multiply_by_digit(const digit_type digit)
 	{
 		std::uintmax_t carry = 0, mul = 0, exteded_digit = digit;
 
@@ -168,7 +156,7 @@ private:
 		return *this;
 	}
 
-	natural school_grade_mul(const natural &num1, const natural &num2) &
+	[[nodiscard]] constexpr natural school_grade_mul(const natural &num1, const natural &num2) &
 	{
 		if (std::ranges::size(num1.digits_) < std::ranges::size(num2.digits_))
 		{
@@ -214,7 +202,7 @@ private:
 		return result;
 	}
 
-	constexpr std::pair<natural, natural> split_at(size_type pos) const
+	[[nodiscard]] constexpr std::pair<natural, natural> split_at(size_type pos) const
 	{
 		if (pos <= std::ranges::size(digits_))
 		{
@@ -234,10 +222,10 @@ private:
 			return {natural(std::move(high)), natural(std::move(low))};
 		}
 
-		return {natural(0), *this};
+		return {0, *this};
 	}
 
-	constexpr natural karatsuba(const natural &num1, const natural &num2)
+	[[nodiscard]] constexpr natural karatsuba(const natural &num1, const natural &num2)
 	{
 		const auto &size1 = std::ranges::size(num1.digits_);
 		const auto &size2 = std::ranges::size(num2.digits_);
@@ -415,9 +403,9 @@ public:
 
 	constexpr natural operator++(int) const &
 	{
-		natural temp(*this);
-		++temp;
-		return temp;
+		natural tmp(*this);
+		++tmp;
+		return tmp;
 	}
 
 	constexpr natural &operator--() &
@@ -427,9 +415,9 @@ public:
 
 	constexpr natural operator--(int) const &
 	{
-		natural temp(*this);
-		--temp;
-		return temp;
+		natural tmp(*this);
+		--tmp;
+		return tmp;
 	}
 
 	constexpr natural &operator+=(const natural &other) &
@@ -547,67 +535,66 @@ public:
 
 	[[nodiscard]] constexpr natural operator+(const natural &other) const
 	{
-		natural temp(*this);
-		temp += other;
-		return temp;
+		natural tmp(*this);
+		tmp += other;
+		return tmp;
 	}
 
 	[[nodiscard]] constexpr natural operator-(const natural &other) const
 	{
-		natural temp(*this);
-		temp -= other;
-		return temp;
+		natural tmp(*this);
+		tmp -= other;
+		return tmp;
 	}
 
 	[[nodiscard]] constexpr natural operator*(const natural &other) const
 	{
-		natural temp(*this);
-		temp *= other;
-		return temp;
+		natural tmp(*this);
+		tmp *= other;
+		return tmp;
 	}
 
 	[[nodiscard]] constexpr natural operator/(const natural &other) const
 	{
-		natural temp(*this);
-		temp /= other;
-		return temp;
+		natural tmp(*this);
+		tmp /= other;
+		return tmp;
 	}
 
 	[[nodiscard]] constexpr natural operator%(const natural &other) const
 	{
-		natural temp(*this);
-		temp %= other;
-		return temp;
+		natural tmp(*this);
+		tmp %= other;
+		return tmp;
 	}
 
 	[[nodiscard]] constexpr natural operator<<(std::size_t shift) const
 	{
-		natural temp(*this);
-		temp <<= shift;
-		return temp;
+		natural tmp(*this);
+		tmp <<= shift;
+		return tmp;
 	}
 
 	[[nodiscard]] constexpr natural operator>>(std::size_t shift) const
 	{
-		natural temp(*this);
-		temp >>= shift;
-		return temp;
+		natural tmp(*this);
+		tmp >>= shift;
+		return tmp;
 	}
 
-	[[nodiscard]] std::string str() const;
 	friend std::ostream &operator<<(std::ostream &out, const natural &num);
 
 	template <std::integral T>
-	[[nodiscard]] T to_common_type(const T &type) const & noexcept
+	[[nodiscard]] explicit operator T() const & noexcept
 	{
-		T ret{};
+		T val{};
 
 		for (const auto &digit : digits_)
 		{
-			ret = ret * number_system_base + static_cast<T>(digit);
+			val = val * number_system_base + static_cast<T>(digit);
 		}
 
-		return ret;
+		return val;
 	}
 };
 }
