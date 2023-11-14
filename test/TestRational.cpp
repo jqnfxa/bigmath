@@ -1,5 +1,36 @@
 #include "../big/rational/rational.hpp"
+#include "../big/numeric/rational.hpp"
 #include "gtest/gtest.h"
+
+TEST (RationalTestSuite, TestNumericRational)
+{
+	using namespace big;
+
+	{
+		natural a{5};
+
+		ASSERT_EQ(numeric::rational::numerator(a), 5);
+		ASSERT_EQ(numeric::rational::denominator(a), 1);
+	}
+	{
+		integer num(-15);
+
+		ASSERT_EQ(numeric::rational::numerator(num), -15);
+		ASSERT_EQ(numeric::rational::denominator(num), 1);
+	}
+	{
+		rational num(-15);
+
+		ASSERT_EQ(numeric::rational::numerator(num), -15);
+		ASSERT_EQ(numeric::rational::denominator(num), 1);
+	}
+	{
+		rational num(-16, 7);
+
+		ASSERT_EQ(numeric::rational::numerator(num), -16);
+		ASSERT_EQ(numeric::rational::denominator(num), 7);
+	}
+}
 
 TEST (RationalTestSuite, TestCreation)
 {
@@ -11,13 +42,13 @@ TEST (RationalTestSuite, TestCreation)
 
 		FAIL();
 	}
-	catch (const std::invalid_argument &e)
+	catch (const std::domain_error &e)
 	{
-		EXPECT_EQ(e.what(), std::string("It is impossible to represent a fraction with denominator 0"));
+		EXPECT_EQ(e.what(), std::string("it is impossible to represent a fraction with denominator 0"));
 	}
 
 	{
-		rational num;
+		rational num{};
 
 		ASSERT_EQ(num.numerator(), 0);
 		ASSERT_EQ(num.denominator(), 1u);
@@ -28,7 +59,7 @@ TEST (RationalTestSuite, TestCreation)
 		}
 		catch (const std::logic_error &e)
 		{
-			EXPECT_EQ(e.what(), std::string("There is no multiplication inverse for zero"));
+			EXPECT_EQ(e.what(), std::string("it is impossible to represent a fraction with denominator 0"));
 		}
 	}
 	{
@@ -79,6 +110,24 @@ TEST (RationalTestSuite, TestPlus)
 
 		ASSERT_EQ(c.numerator(), 124);
 		ASSERT_EQ(c.denominator(), 105u);
+	}
+	{
+		rational a(5, 7u);
+		natural b(7);
+
+		rational c = a + b;
+
+		ASSERT_EQ(c.numerator(), 54);
+		ASSERT_EQ(c.denominator(), 7);
+	}
+	{
+		rational a(5, 7u);
+		integer b(-7);
+
+		rational c = a + b;
+
+		ASSERT_EQ(c.numerator(), -44);
+		ASSERT_EQ(c.denominator(), 7);
 	}
 	{
 		rational a(4, 45u);
@@ -148,6 +197,24 @@ TEST (RationalTestSuite, TestMinus)
 
 		ASSERT_EQ(c.numerator(), 26);
 		ASSERT_EQ(c.denominator(), 105u);
+	}
+	{
+		rational a(7, 15u);
+		natural b(5);
+
+		rational c = a - b;
+
+		ASSERT_EQ(c.numerator(), -68);
+		ASSERT_EQ(c.denominator(), 15);
+	}
+	{
+		rational a(7, 15u);
+		integer b(-5);
+
+		rational c = a - b;
+
+		ASSERT_EQ(c.numerator(), 82);
+		ASSERT_EQ(c.denominator(), 15);
 	}
 	{
 		rational a(4, 30u);
@@ -228,13 +295,13 @@ TEST (RationalTestSuite, TestMul)
 		ASSERT_EQ(c.denominator(), 702u);
 	}
 	{
-		rational a(-17, 169u);
-		rational b(-13, 54u);
+		rational a(-1758, 15756);
+		integer b(101);
 
 		rational c = a * b;
 
-		ASSERT_EQ(c.numerator(), 17);
-		ASSERT_EQ(c.denominator(), 702u);
+		ASSERT_EQ(c.numerator(), -293);
+		ASSERT_EQ(c.denominator(), 26);
 	}
 }
 
@@ -251,9 +318,9 @@ TEST (RationalTestSuite, TestDivide)
 
 		FAIL();
 	}
-	catch (const std::logic_error &e)
+	catch (const std::domain_error &e)
 	{
-		EXPECT_EQ(e.what(), std::string("There is no multiplication inverse for zero"));
+		EXPECT_EQ(e.what(), std::string("it is impossible to represent a fraction with denominator 0"));
 	}
 	{
 		rational a(17, 169u);
@@ -275,9 +342,43 @@ TEST (RationalTestSuite, TestDivide)
 	{
 		rational a(-136, 15u);
 
-		rational c = a * a.inverse();
+		rational c = a / a.inverse();
 
-		ASSERT_EQ(c.numerator(), 1);
-		ASSERT_EQ(c.denominator(), 1u);
+		ASSERT_EQ(c.numerator(), 18496);
+		ASSERT_EQ(c.denominator(), 225);
+	}
+	{
+		rational a(-136, 17u);
+		rational b(184, 6);
+
+		rational c = a / b;
+
+		ASSERT_EQ(c.numerator(), -6);
+		ASSERT_EQ(c.denominator(), 23);
+	}
+	{
+		rational a(136, 15u);
+		rational b(-184, 6);
+
+		rational c = a / b;
+
+		ASSERT_EQ(c.numerator(), -34);
+		ASSERT_EQ(c.denominator(), 115);
+	}
+	{
+		rational a(136, 23u);
+
+		rational c = a / -1;
+
+		ASSERT_EQ(c.numerator(), -136);
+		ASSERT_EQ(c.denominator(), 23);
+	}
+	{
+		rational a(natural("471283764823694817263984712693874691283746981237649124412341234"), natural("34123"));
+
+		rational c = a / -2;
+
+		ASSERT_EQ(c.numerator(), -integer(natural("235641882411847408631992356346937345641873490618824562206170617")));
+		ASSERT_EQ(c.denominator(), 34123);
 	}
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <type_traits>
-#include "../natural/natural.hpp"
+#include "../traits/natural.hpp"
 
 
 namespace big::numeric
@@ -11,7 +11,7 @@ namespace detail
 template <typename T>
 concept member_abs = requires (T t)
 {
-	{ t.abs() } -> std::same_as<const natural &>;
+	{ t.abs() } -> traits::natural_like;
 };
 
 template <typename T>
@@ -19,12 +19,18 @@ concept member_sign_bit = requires (T t)
 {
 	{ t.sign_bit() } -> std::same_as<bool>;
 };
+
+template <typename T>
+concept member_is_zero = requires (T t)
+{
+	{ t.is_zero() } -> std::same_as<bool>;
+};
 }
 
 template <typename T>
 [[nodiscard]] constexpr bool sign_bit(const T &val) noexcept
 {
-	if constexpr (std::same_as<T, natural>)
+	if constexpr (traits::natural_like<T>)
 	{
 		return false;
 	}
@@ -49,7 +55,7 @@ template <typename T>
 template <typename T>
 [[nodiscard]] constexpr decltype(auto) abs(const T &val) noexcept
 {
-	if constexpr (std::same_as<T, natural>)
+	if constexpr (traits::natural_like<T>)
 	{
 		return val;
 	}
@@ -65,10 +71,37 @@ template <typename T>
 	}
 }
 
-template <typename T, typename U>
-[[nodiscard]] constexpr auto distance(const T &a, const U &b) noexcept
+template <typename T>
+[[nodiscard]] constexpr bool is_zero(const T &val) noexcept
+{
+	if constexpr (detail::member_is_zero<T>)
+	{
+		return val.is_zero();
+	}
+	else
+	{
+		return val == T{};
+	}
+}
+
+// TODO: proper concepts
+template <typename T>
+[[nodiscard]] constexpr T multiplicative_identity() noexcept
+{
+	if constexpr (requires (T t) { { t.major_coefficient() }; })
+	{
+		return T{{1}};
+	}
+	else
+	{
+		return T{1};
+	}
+}
+
+template <typename T>
+[[nodiscard]] constexpr auto distance(const T &a, const T &b) noexcept
 {
 	const auto order = a <=> b;
-	return order == std::strong_ordering::equal ? 0 : order > 0 ? a - b : b - a;
+	return order == std::strong_ordering::equal ? T{} : order > 0 ? a - b : b - a;
 }
 }

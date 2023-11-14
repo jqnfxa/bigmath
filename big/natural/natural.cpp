@@ -10,7 +10,7 @@
 
 namespace big
 {
-natural::natural(const std::string &num)
+natural::natural(std::string_view num)
 {
 	if (num.empty())
 	{
@@ -40,7 +40,7 @@ natural::natural(const std::string &num)
 	{
 		auto chunk = num.substr(offset, current_chunk_size);
 
-		digit_type digit = std::strtoul(chunk.data(), nullptr, 10);
+		digit_type digit = std::strtoul(std::string(chunk.begin(), chunk.end()).data(), nullptr, 10);
 		digits_.insert(std::ranges::begin(digits_), digit);
 
 		offset += current_chunk_size;
@@ -48,13 +48,6 @@ natural::natural(const std::string &num)
 	}
 
 	erase_leading_zeroes();
-}
-
-std::string natural::str() const
-{
-	std::ostringstream stream;
-	stream << *this;
-	return stream.str();
 }
 
 std::ostream &operator<<(std::ostream &out, const natural &num)

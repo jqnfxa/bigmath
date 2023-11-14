@@ -1,15 +1,11 @@
 #pragma once
 
 #include "../natural/natural.hpp"
-#include "../traits/traits.hpp"
-
+#include "../traits/integer.hpp"
 
 namespace big
 {
-class rational;
-class integer;
-
-class integer
+class integer : public conv::stringifiable<integer>
 {
 	bool sign_bit_;
 	natural abs_;
@@ -22,10 +18,11 @@ class integer
 		}
 	}
 
-	template <traits::integral T, typename BinaryPred>
+	template <traits::integer_like T, typename BinaryPred>
 	constexpr integer &add(const T &other, const BinaryPred &sign_predicate) & noexcept
 	{
 		const auto &other_abs = numeric::abs(other);
+
 		if (sign_predicate(sign_bit_, numeric::sign_bit(other)))
 		{
 			abs_ += other_abs;
@@ -41,7 +38,7 @@ class integer
 	}
 
 public:
-	template <std::integral T>
+	template <traits::integer_like T = std::intmax_t>
 	[[nodiscard]] constexpr integer(T num = 0) noexcept
 		: sign_bit_(numeric::sign_bit(num))
 		, abs_(numeric::abs(num))
@@ -57,10 +54,11 @@ public:
 		, abs_(std::move(natural))
 	{}
 
-	template <traits::integral T>
+	template <traits::integer_like T>
 	[[nodiscard]] constexpr std::strong_ordering operator<=>(const T &other) const noexcept
 	{
 		const auto other_sign_bit = numeric::sign_bit(other);
+
 		if (sign_bit_ ^ other_sign_bit)
 		{
 			return sign_bit_ && !other_sign_bit ? std::strong_ordering::less : std::strong_ordering::greater;
@@ -70,7 +68,7 @@ public:
 		return sign_bit_ && other_sign_bit ? other_abs <=> abs_ : abs_ <=> other_abs;
 	}
 
-	template <traits::integral T>
+	template <traits::integer_like T>
 	[[nodiscard]] constexpr bool operator==(const T &other) const noexcept
 	{
 		return *this <=> other == std::strong_ordering::equal;
@@ -91,12 +89,12 @@ public:
 		return abs_;
 	}
 
-	[[nodiscard]] constexpr integer operator+() const &
+	[[nodiscard]] constexpr integer operator+() const noexcept
 	{
 		return *this;
 	}
 
-	[[nodiscard]] constexpr integer operator-() const &
+	[[nodiscard]] constexpr integer operator-() const noexcept
 	{
 		return {abs(), !sign_bit_};
 	}
@@ -108,9 +106,9 @@ public:
 
 	constexpr integer operator++(int) const &
 	{
-		integer temp(*this);
-		++temp;
-		return temp;
+		integer tmp(*this);
+		++tmp;
+		return tmp;
 	}
 
 	constexpr integer &operator--() &
@@ -120,24 +118,24 @@ public:
 
 	constexpr integer operator--(int) const &
 	{
-		integer temp(*this);
-		--temp;
-		return temp;
+		integer tmp(*this);
+		--tmp;
+		return tmp;
 	}
 
-	template <traits::integral T>
+	template <traits::integer_like T>
 	constexpr integer &operator+=(const T &other) &
 	{
 		return add(other, std::ranges::equal_to{});
 	}
 
-	template <traits::integral T>
+	template <traits::integer_like T>
 	constexpr integer &operator-=(const T &other) &
 	{
 		return add(other, std::ranges::not_equal_to{});
 	}
 
-	template <traits::integral T>
+	template <traits::integer_like T>
 	constexpr integer &operator*=(const T &other) &
 	{
 		sign_bit_ ^= numeric::sign_bit(other);
@@ -147,7 +145,7 @@ public:
 		return *this;
 	}
 
-	template <traits::integral T>
+	template <traits::integer_like T>
 	constexpr integer &operator/=(const T &other) &
 	{
 		sign_bit_ ^= numeric::sign_bit(other);
@@ -157,12 +155,12 @@ public:
 		return *this;
 	}
 
-	template <traits::integral T>
+	template <traits::integer_like T>
 	constexpr integer &operator%=(const T &other) &
 	{
 		abs_ %= numeric::abs(other);
-
 		normalize();
+
 		return *this;
 	}
 
@@ -182,58 +180,58 @@ public:
 		return *this;
 	}
 
-	template <traits::integral T>
-	constexpr integer operator+(const T &other) const noexcept
+	template <traits::integer_like T>
+	constexpr integer operator+(const T &other) const
 	{
-		integer temp(*this);
-		temp += other;
-		return temp;
+		integer tmp(*this);
+		tmp += other;
+		return tmp;
 	}
 
-	template <traits::integral T>
+	template <traits::integer_like T>
 	constexpr integer operator-(const T &other) const
 	{
-		integer temp(*this);
-		temp -= other;
-		return temp;
+		integer tmp(*this);
+		tmp -= other;
+		return tmp;
 	}
 
-	template <traits::integral T>
-	constexpr integer operator*(const T &other) const noexcept
+	template <traits::integer_like T>
+	constexpr integer operator*(const T &other) const
 	{
-		integer temp(*this);
-		temp *= other;
-		return temp;
+		integer tmp(*this);
+		tmp *= other;
+		return tmp;
 	}
 
-	template <traits::integral T>
+	template <traits::integer_like T>
 	constexpr integer operator/(const T &other) const
 	{
-		integer temp(*this);
-		temp /= other;
-		return temp;
+		integer tmp(*this);
+		tmp /= other;
+		return tmp;
 	}
 
-	template <traits::integral T>
+	template <traits::integer_like T>
 	constexpr integer operator%(const T &other) const
 	{
-		integer temp(*this);
-		temp %= other;
-		return temp;
+		integer tmp(*this);
+		tmp %= other;
+		return tmp;
 	}
 
 	constexpr integer operator<<(std::size_t shift) const
 	{
-		integer temp(*this);
-		temp <<= shift;
-		return temp;
+		integer tmp(*this);
+		tmp <<= shift;
+		return tmp;
 	}
 
 	constexpr integer operator>>(std::size_t shift) const
 	{
-		integer temp(*this);
-		temp >>= shift;
-		return temp;
+		integer tmp(*this);
+		tmp >>= shift;
+		return tmp;
 	}
 
 	[[nodiscard]] constexpr bool is_zero() const noexcept
@@ -241,7 +239,12 @@ public:
 		return abs_.is_zero();
 	}
 
-	[[nodiscard]] std::string str() const noexcept;
-	friend std::ostream &operator<<(std::ostream &out, const integer &num) noexcept;
+	friend std::ostream &operator<<(std::ostream &out, const integer &num);
+
+	template <std::integral T>
+	[[nodiscard]] explicit operator T() const & noexcept
+	{
+		return numeric::sign(*this) * static_cast<T>(abs_);
+	}
 };
 }

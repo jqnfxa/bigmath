@@ -1,24 +1,18 @@
 #include <ranges>
 #include <sstream>
 #include "integer.hpp"
+#include "../numeric/numeric.hpp"
 
 
 namespace big
 {
-std::string integer::str() const noexcept
+std::ostream &operator<<(std::ostream &out, const integer &num)
 {
-	std::ostringstream ss;
-	ss << *this;
-	return ss.str();
-}
-
-std::ostream &operator<<(std::ostream &out, const integer &num) noexcept
-{
-	if (num.sign_bit())
+	if (numeric::sign_bit(num))
 	{
 		out << '-';
 	}
 
-	return out << num.abs();
+	return out << numeric::abs(num);
 }
 }

@@ -17,6 +17,7 @@ TEST(IntegerTestSuite, TestComparison)
 	ASSERT_TRUE(integer(5) < integer(6));
 	ASSERT_TRUE(integer(-5) < integer(6));
 	ASSERT_TRUE(integer(-5) < integer(2));
+	ASSERT_TRUE(integer(natural("4128374698239487129387492183741234")) > natural("4128374698239487129387492183741233"));
 }
 
 TEST(IntegerTestSuite, TestPlus)
@@ -29,6 +30,7 @@ TEST(IntegerTestSuite, TestPlus)
 	ASSERT_EQ(integer(-54) + integer(74), integer(20));
 	ASSERT_EQ(integer(-54) + integer(24), integer(-30));
 	ASSERT_EQ(integer(-54) + integer(-24), integer(-78));
+	ASSERT_EQ(integer(-54) + natural(74), integer(20));
 }
 
 TEST(IntegerTestSuite, TestMinus)
@@ -42,6 +44,7 @@ TEST(IntegerTestSuite, TestMinus)
 	ASSERT_EQ(integer(-10) - integer(55), integer(-65));
 	ASSERT_EQ(integer(-10) - integer(-5), integer(-5));
 	ASSERT_EQ(integer(-10) - integer(-55), integer(45));
+	ASSERT_EQ(integer(-10) - natural(55), integer(-65));
 }
 
 TEST(IntegerTestSuite, TestProduct)
@@ -76,6 +79,10 @@ TEST(IntegerTestSuite, TestProduct)
 	a *= integer(natural("123846712384681927354761253876489737419276398471265936518237640812734987387412387694127312374812736498123694871234"), true);
 
 	ASSERT_EQ(a.str(), "136224572053968962584232867395175504225645978116476610543552901823763785701847318782216866610113395447428667555139482130");
+
+	a += natural("142374123412");
+
+	ASSERT_EQ(a.str(), "136224572053968962584232867395175504225645978116476610543552901823763785701847318782216866610113395447428667697513605542");
 }
 
 TEST(IntegerTestSuite, TestBitwiseLeftShift)
@@ -147,6 +154,7 @@ TEST(IntegerTestSuite, TestDivision)
 	ASSERT_EQ(integer(-56885154) / integer(7), integer(-8126450));
 	ASSERT_EQ(integer(-56885154) / integer(-7), integer(8126450));
 	ASSERT_EQ(integer(-56885154) / -integer(555555555), integer(0));
+	ASSERT_EQ(integer(natural("471283764823694817263984712693874691283746981237649124412341234")) / -integer(34123), integer(natural("13811322709717633773817797752069709324612343030731445781799"), true));
 
 	try
 	{
@@ -191,32 +199,3 @@ TEST(IntegerTestSuite, TestModule)
 		EXPECT_EQ(e.what(), std::string("division by zero"));
 	}
 }
-
-/*
-TEST(IntegerTestSuite, TestConstruct)
-{
-	using namespace big;
-
-	{
-		rational b(16, 5u);
-	 	integer a = b;
-
-	 	ASSERT_EQ(a.str(), "3");
-	 	ASSERT_EQ(a, 3);
-	}
-	{
-	 	rational b(-165477446, 5395u);
-	 	integer a(b);
-
-	 	ASSERT_EQ(a.str(), "-30672");
-	 	ASSERT_EQ(a, integer(-30672));
-	}
-	{
-	 	rational b(-1654, 5395u);
-	 	integer a(b);
-
-	 	ASSERT_EQ(a.str(), "0");
-	 	ASSERT_EQ(a, 0);
-	}
-}
-*/

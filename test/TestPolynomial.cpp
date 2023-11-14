@@ -1,6 +1,7 @@
 #include "../big/polynomial/polynomial.hpp"
 #include "gtest/gtest.h"
 
+
 TEST(PolynomialTestSuite, PolynomialCreate)
 {
 	using namespace big;
@@ -78,7 +79,6 @@ TEST(PolynomialTestSuite, PolynomialPlus)
 		polynomial cmp = polynomial(p1) + polynomial(p2);
 		std::vector<rational> exp = {rational(3), rational(-11, 42u), rational(0)};
 		std::reverse(exp.begin(), exp.end());
-
 		ASSERT_TRUE(std::equal(cmp.coefficients().begin(), cmp.coefficients().end(), exp.begin(), exp.end()));
 	}
 	{
@@ -277,7 +277,7 @@ TEST(PolynomialTestSuite, PolynomialFac)
 
 	{
 		std::vector<rational> p1 = {rational(9, 7u), rational(6, 11u), rational(3, 13u)};
-		polynomial cmp = polynomial(p1).normalize();
+		polynomial cmp = polynomial(p1).normalized();
 
 		std::vector<rational> exp = {rational(429), rational(182), rational(77)};
 		std::reverse(exp.begin(), exp.end());
