@@ -5,10 +5,9 @@
 #include "../numeric/polynomial.hpp"
 #include "../algorithm/container.hpp"
 
-
 namespace big
 {
-class polynomial : public conv::stringifiable<integer>
+class polynomial : public conv::stringifiable<polynomial>
 {
 	std::vector<rational> coefficients_;
 
@@ -139,9 +138,10 @@ public:
 
 	constexpr polynomial &operator+=(const polynomial &other) & noexcept
 	{
-		coefficients_.resize(std::ranges::max(numeric::polynomial::degree(*this), numeric::polynomial::degree(other)) + 1);
+		const auto other_degree = other.degree();
+		coefficients_.resize(std::ranges::max(degree(), other_degree) + 1);
 
-		for (size_type i = 0; i < std::ranges::size(other.coefficients_); ++i)
+		for (size_type i = 0; i < other_degree + 1; ++i)
 		{
 			numeric::polynomial::coefficient_at(*this, i) += numeric::polynomial::coefficient_at(other, i);
 		}

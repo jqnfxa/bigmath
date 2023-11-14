@@ -12,7 +12,14 @@ constexpr void erase_leading_up_to_last_if(std::vector<T>& xs, const UnaryPred &
 {
 	namespace ranges = std::ranges;
 
-	if (ranges::empty(xs) || ranges::size(xs) == 1 && pred(*ranges::begin(xs)))
+	const auto size = ranges::size(xs);
+
+	if (size == 0)
+	{
+		return xs.push_back(T{});
+	}
+
+	if (size == 1 && pred(*ranges::begin(xs)))
 	{
 		return;
 	}

@@ -7,10 +7,9 @@
 #include "../integer/integer.hpp"
 #include "../algorithm/algorithm.hpp"
 
-
 namespace big
 {
-class rational : public conv::stringifiable<integer>
+class rational : public conv::stringifiable<rational>
 {
 	integer numerator_;
 	natural denominator_;

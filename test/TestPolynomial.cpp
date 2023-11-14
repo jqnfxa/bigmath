@@ -79,7 +79,6 @@ TEST(PolynomialTestSuite, PolynomialPlus)
 		polynomial cmp = polynomial(p1) + polynomial(p2);
 		std::vector<rational> exp = {rational(3), rational(-11, 42u), rational(0)};
 		std::reverse(exp.begin(), exp.end());
-
 		ASSERT_TRUE(std::equal(cmp.coefficients().begin(), cmp.coefficients().end(), exp.begin(), exp.end()));
 	}
 	{
