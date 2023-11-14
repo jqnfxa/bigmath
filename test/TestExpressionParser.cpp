@@ -3,6 +3,7 @@
 #include "../big/rational/rational.hpp"
 #include "../big/polynomial/polynomial.hpp"
 #include "../big/parse/parse.hpp"
+#include "../big/parse/parse_polynomial.hpp"
 #include "gtest/gtest.h"
 
 
@@ -123,37 +124,37 @@ TEST(TestParserSuite, ParseRational)
 		ASSERT_EQ(parse::expression(expression).evaluate<rational>(), expected);
 	}
 }
-/*
+
 TEST(TestParserSuite, ParsePolynomial)
 {
 	using namespace big;
 
-	{
+	/*{
 		const auto expression = "(x+1)(x-1)";
 		const auto expected = polynomial({rational{1}, rational{0}, rational{-1}});
-		ASSERT_EQ(parse::expression(expression).evaluate<polynomial>(), expected);
+		ASSERT_EQ(parse::parse_polynomial(expression), expected);
 	}
 	{
 		const auto expression = "(14/9*x+17/3)(x-1)^7+48x^3";
 		const auto expected = "14/9*x^8-47/9*x^7-7*x^6+581/9*x^5-1295/9*x^4+641/3*x^3-973/9*x^2+343/9*x-17/3";
-		ASSERT_EQ(parse::expression(expression).evaluate<polynomial>().str(), expected);
+		ASSERT_EQ(parse::parse_polynomial(expression).str(), expected);
 	}
 	{
 		const auto expression = "(14/9*x+17/3)(x-1)^-1+48x^3";
 		const auto expected = "48*x^3";
-		ASSERT_EQ(parse::expression(expression).evaluate<polynomial>().str(), expected);
-	}
+		ASSERT_EQ(parse::parse_polynomial(expression).str(), expected);
+	}*/
 	{
 		const auto expression = "x + x + 17 * x + x^65";
 		const auto expected = "x^65+19*x";
-		ASSERT_EQ(parse::expression(expression).evaluate<polynomial>().str(), expected);
+		ASSERT_EQ(parse::parse_polynomial(expression).str(), expected);
 	}
 	{
 		const auto expression = "x + x + 17 * x + x^6 - 989/6548 * x ^ -1";
 		const auto expected = "x^65+19*x";
-		ASSERT_EQ(parse::expression(expression).evaluate<polynomial>().str(), expected);
+		ASSERT_EQ(parse::parse_polynomial(expression).str(), expected);
 	}
 	// TODO: unary operations: fac, nmr, der, 
 	// TODO: additional operation for nmr
 	// TODO: additional operation for derivative
-}*/
+}

@@ -36,6 +36,8 @@ add_executable(MathModule_test 	big/algorithm/algorithm.hpp
 				big/rational/rational.cpp
 				big/polynomial/polynomial.hpp
 				big/polynomial/polynomial.cpp
+				big/parse/parse.hpp
+				big/parse/parse_polynomial.hpp
 				#test/TestNatural.cpp 
 				#test/TestInteger.cpp 
 				#test/TestRational.cpp
