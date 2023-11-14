@@ -1,6 +1,6 @@
 #pragma once
 
-#include "natural/natural.hpp"
+#include "../natural/natural.hpp"
 
 
 namespace big::traits

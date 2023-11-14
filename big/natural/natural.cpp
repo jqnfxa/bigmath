@@ -10,7 +10,7 @@
 
 namespace big
 {
-natural::natural(const std::string &num)
+natural::natural(std::string_view num)
 {
 	if (num.empty())
 	{

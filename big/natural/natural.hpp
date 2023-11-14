@@ -326,7 +326,7 @@ public:
 		: natural(static_cast<std::uintmax_t>(std::abs(value)))
 	{}
 
-	[[nodiscard]] natural(const std::string &num);
+	[[nodiscard]] natural(std::string_view num);
 
 
 	[[nodiscard]] constexpr bool is_even() const noexcept
