@@ -361,6 +361,7 @@ public:
 
 			if (remainder < divisor)
 			{
+				quotient <<= 1;
 				continue;
 			}
 
