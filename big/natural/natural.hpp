@@ -402,7 +402,10 @@ public:
 		return std::strong_ordering::equal;
 	}
 
-	[[nodiscard]] constexpr bool operator==(const natural &other) const noexcept = default;
+	[[nodiscard]] constexpr bool operator==(const natural &other) const noexcept
+	{
+		return *this <=> other == std::strong_ordering::equal;
+	}
 
 	constexpr natural &operator++() &
 	{
@@ -593,7 +596,7 @@ public:
 	[[nodiscard]] std::string str() const;
 	friend std::ostream &operator<<(std::ostream &out, const natural &num);
 
-	template <std::integral T>
+	/*template <std::integral T>
 	[[nodiscard]] operator T() const & noexcept
 	{
 		T ret{};
@@ -603,6 +606,6 @@ public:
 		}
 
 		return ret;
-	}
+	}*/
 };
 }

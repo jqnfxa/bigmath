@@ -158,25 +158,25 @@ TEST(AlgorithmTestSuite, TestPowerPolynomial)
 		polynomial poly({1, 1, 1, 1, 1, 1, 1, 1, 1});
 		poly = big::pow(poly, 0);
 
-		ASSERT_EQ(poly.to_str(), "1");
+		ASSERT_EQ(poly.str(), "1");
 	}
 	{
 		polynomial poly({1, 1, 1, 1, 1, 1, 1, 1, 1});
 		poly = big::pow(poly, -1);
 
-		ASSERT_EQ(poly.to_str(), "0");
+		ASSERT_EQ(poly.str(), "0");
 	}
 	{
 		polynomial poly({1, 1, 1, 1});
 		poly = big::pow(poly, 3);
 
-		ASSERT_EQ(poly.to_str(), "x^9+3*x^8+6*x^7+10*x^6+12*x^5+12*x^4+10*x^3+6*x^2+3*x+1");
+		ASSERT_EQ(poly.str(), "x^9+3*x^8+6*x^7+10*x^6+12*x^5+12*x^4+10*x^3+6*x^2+3*x+1");
 	}
 	{
 		polynomial poly({rational(17, 6), 0, 0, 0, 0, 0, 0, 1});
 		poly = big::pow(poly, 4);
 
-		ASSERT_EQ(poly.to_str(), "83521/1296*x^28+4913/54*x^21+289/6*x^14+34/3*x^7+1");
+		ASSERT_EQ(poly.str(), "83521/1296*x^28+4913/54*x^21+289/6*x^14+34/3*x^7+1");
 	}
 	{
 		polynomial happy_ticket({1, 1, 1, 1, 1, 1, 1, 1, 1, 1});

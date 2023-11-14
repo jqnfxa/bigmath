@@ -12,13 +12,8 @@ namespace big
 template <traits::polynomial_like T>
 [[nodiscard]] constexpr T gcd(const T &a, const T &b) noexcept
 {
-	if (a < b)
-	{
-		return gcd(b, a);
-	}
-
-	T first = a;
-	T second = b;
+	T first(a);
+	T second(b);
 
 	while (!numeric::is_zero(second))
 	{
