@@ -41,6 +41,7 @@ add_executable(MathModule_test 	big/algorithm/algorithm.hpp
 				test/TestRational.cpp
 				test/TestPolynomial.cpp
 				test/TestAlgorithms.cpp
+				test/TestExpressionParser.cpp 
 				test/main.cpp)
 
 # Link GoogleTest to the test executable
