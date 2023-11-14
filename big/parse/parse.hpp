@@ -18,6 +18,7 @@ enum class token_id
 	sub,
 	mul,
 	div,
+	pow,
 	mod,
 	gcd,
 	lcm,
@@ -44,14 +45,29 @@ const std::map<token_id, std::string_view> tokens{
 	{token_id::sub, "-"},
 	{token_id::mul, "*"},
 	{token_id::div, "/"},
+	{token_id::pow, "^"},
 	{token_id::mod, "mod"},
 	{token_id::gcd, "gcd"},
 	{token_id::lcm, "lcm"},
-	{token_id::shl, "<<"},
+	{token_id::shr, ">>"},
 	{token_id::shr, ">>"},
 	{token_id::compound_begin, "("},
 	{token_id::compound_end, ")"},
 };
+
+enum class operator_precedence : unsigned char
+{
+	lowest,
+	low,
+	medium,
+	high,
+	highest,
+};
+
+[[nodiscard]] constexpr std::strong_ordering operator<=>(const operator_precedence &lhs, const operator_precedence &rhs) noexcept
+{
+	return static_cast<unsigned char>(lhs) <=> static_cast<unsigned char>(rhs);
+}
 
 [[nodiscard]] bool is_blank(char ch) noexcept
 {
@@ -76,6 +92,30 @@ const std::map<token_id, std::string_view> tokens{
 [[nodiscard]] bool is_multiplicative_operator(token_id id) noexcept
 {
 	return is_binary_operator(id) && !is_additive_operator(id);
+}
+
+[[nodiscard]] operator_precedence precedence(token_id id) noexcept
+{
+	switch (id)
+	{
+	case token_id::add:
+		return operator_precedence::low;
+
+	case token_id::sub:
+		return operator_precedence::lowest;
+
+	case token_id::mul:
+		return operator_precedence::medium;
+
+	case token_id::div:
+		return operator_precedence::medium;
+
+	case token_id::pow:
+		return operator_precedence::high;
+
+	default:
+		return operator_precedence::highest;
+	}
 }
 
 [[nodiscard]] token_id match_token(std::string_view str) noexcept
@@ -175,19 +215,16 @@ public:
 				break;
 
 			default:
-				if (detail::is_additive_operator(token.ident))
+				while (!operators.empty())
 				{
-					while (!operators.empty())
+					if (const auto &op = operators.top(); detail::is_binary_operator(op.ident) && detail::precedence(op.ident) >= detail::precedence(token.ident))
 					{
-						if (const auto &op = operators.top(); !detail::is_multiplicative_operator(op.ident))
-						{
-							break;
-						}
-						else
-						{
-							output.push(op);
-							operators.pop();
-						}
+						output.push(op);
+						operators.pop();
+					}
+					else
+					{
+						break;
 					}
 				}
 
@@ -234,6 +271,10 @@ public:
 
 			case token_id::div:
 				lhs /= rhs;
+				break;
+
+			case token_id::pow:
+				lhs = pow(lhs, rhs);
 				break;
 
 			case token_id::mod:
