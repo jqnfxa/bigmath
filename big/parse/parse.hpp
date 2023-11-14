@@ -7,6 +7,10 @@
 
 #include "../traits/traits.hpp"
 #include "../algorithm/algorithm.hpp"
+#include "../natural/natural.hpp"
+#include "../integer/integer.hpp"
+#include "../rational/rational.hpp"
+#include "../natural/natural.hpp"
 
 
 namespace big::parse
@@ -135,6 +139,21 @@ protected:
 		return {id, substr};
 	}
 
+	template <traits::rational_like T>
+        [[nodiscard]] std::size_t get_shift(const T &val) const 
+	{
+		if constexpr (std::is_same_v<std::remove_cvref_t<T>, natural>)
+		{
+			return numeric::convert_to_common_type<T, std::size_t>(val);
+		}
+		else
+		if constexpr (std::unsigned_integral<std::remove_cvref_t<T>>)
+		{
+			return numeric::convert_to_common_type<T, std::size_t>(val);
+		}
+
+		throw std::invalid_argument("shift must be a natural");
+	}
 public:
 	[[nodiscard]] explicit expression(std::string_view expression)
 		: expression_(expression)
@@ -211,7 +230,7 @@ public:
 		auto tokens = parse();
 		std::stack<T> values;
 
-		const auto evaluate_operation = [&values](token_id ident)
+		const auto evaluate_operation = [this, &values] (token_id ident)
 		{
 			const T rhs = values.top();
 			values.pop();
@@ -249,11 +268,11 @@ public:
 				break;
 
 			case token_id::shl:
-				lhs <<= static_cast<std::size_t>(rhs);
+				lhs <<= get_shift(rhs);
 				break;
 
 			case token_id::shr:
-				lhs >>= static_cast<std::size_t>(rhs);
+				lhs >>= get_shift(rhs);
 				break;
 			}
 

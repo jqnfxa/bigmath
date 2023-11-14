@@ -144,6 +144,13 @@ namespace big
 		}
 
 		template <traits::rational_like T>
+		rational &operator%=(const T &other) &
+		{
+			*this *= 0;
+			return *this;
+		}
+
+		template <traits::rational_like T>
 		rational operator+(const T &other) const & noexcept
 		{
 			rational temp(*this);
@@ -172,6 +179,14 @@ namespace big
 		{
 			rational temp(*this);
 			temp /= other;
+			return temp;
+		}
+
+		template <traits::rational_like T>
+		rational operator%(const T &other) &
+		{
+			rational temp(*this);
+			temp %= other;
 			return temp;
 		}
 

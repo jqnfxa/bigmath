@@ -84,6 +84,21 @@ template <typename T>
 	}
 }
 
+// TODO: proper to_common_type cast
+template <typename T, typename U>
+[[nodiscard]] constexpr bool convert_to_common_type(const T &val) noexcept
+{
+	if constexpr (traits::natural_like<T> && std::integral<U>)
+	{
+		return val.to_common_type(U{});
+	}
+	else
+	if constexpr (std::integral<T>)
+	{
+		return static_cast<U>(val);
+	}
+}
+
 // TODO: proper concepts
 template <typename T>
 [[nodiscard]] constexpr T multiplicative_identity() noexcept
