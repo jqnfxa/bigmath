@@ -27,6 +27,8 @@ constexpr void erase_leading_up_to_last_if(std::vector<T>& xs, const UnaryPred &
 	const auto last = ranges::find_if_not(xs | std::views::reverse, pred);
 	if (last == ranges::rend(xs))
 	{
+		xs.resize(1);
+		xs[0] = T{};
 		return;
 	}
 
