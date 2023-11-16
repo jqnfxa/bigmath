@@ -4,6 +4,7 @@
 #include "../numeric/numeric.hpp"
 #include "../numeric/polynomial.hpp"
 #include "../algorithm/container.hpp"
+#include <map>
 
 namespace big
 {
@@ -16,6 +17,14 @@ class polynomial : public conv::stringifiable<polynomial>
 		return algorithm::erase_leading_up_to_last_if(coefficients_, numeric::is_zero<typename decltype(coefficients_)::value_type>);
 	}
 
+	template <typename T>
+	void throw_if_empty(const T &container)
+	{
+		if (std::ranges::empty(container))
+		{
+			throw std::invalid_argument("coefficients cannot be empty");
+		}
+	}
 public:
 	using size_type = std::size_t;
 
@@ -25,14 +34,12 @@ public:
 
 	[[nodiscard]] constexpr explicit polynomial(const std::vector<rational> &coefficients)
 	{
-		if (std::ranges::empty(coefficients))
-		{
-			throw std::invalid_argument("coefficients cannot be empty");
-		}
-
+		throw_if_empty(coefficients);
 		coefficients_.assign(std::ranges::rbegin(coefficients), std::ranges::rend(coefficients));
 		erase_leading_zeroes();
 	}
+
+	[[nodiscard]] explicit polynomial(const std::map<std::size_t, rational> &coefficients);
 
 	[[nodiscard]] constexpr bool is_zero() const & noexcept
 	{
