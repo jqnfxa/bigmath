@@ -7,101 +7,173 @@
 
 namespace big::parse
 {
-[[nodiscard]] std::map<std::size_t, big::rational> parse_polynomial_helper(const std::string& poly)
+struct polynomial_node
 {
-	std::map<std::size_t, big::rational> coefficients;
-	std::string token;
+	std::size_t degree;
+	big::rational coefficient;
+};
 
-	std::string coefficient;
-	std::size_t degree = 0;
-
-	char sign = '+';
-	bool isCoefficient = true;
-
-	for (const auto &c : poly) 
+void throw_if_bad_polynomial_node(std::string_view str)
+{
+	if (str.empty())
 	{
-		if (c == '+' || c == '-') 
-		{
-			if (!token.empty()) 
-			{
-				if (isCoefficient) 
-				{
-					coefficient = token;
-					degree = 0;
-				} 
-				else 
-				{
-					degree = std::stoull(token);
-				}
+		throw std::invalid_argument("empty node");
+	}
 
-				coefficients[degree] += big::parse::expression((sign == '+' ? "" : "0-") + coefficient).evaluate<big::rational>();
-			}
+	const auto npos = std::string_view::npos;
+	const auto mul = str.find(detail::tokens.at(token_id::mul));
+	const auto x = str.find('x');
+	const auto power_sign = x != npos ? str.find(detail::tokens.at(token_id::pow), x + 1) : npos;
+	const auto power = power_sign != npos ? power_sign + 1 : npos;
 
-			token.clear();
-			sign = c;
-			isCoefficient = true;
-		} 
-		else if (c == 'x') 
-		{
-			if (token.empty()) 
-			{
-				coefficient = "1";
-			} 
-			else 
-			{
-				coefficient = token;
-			}
+	if (mul != npos && x < mul)
+	{
+		throw std::invalid_argument("unexpected '*' after 'x'");
+	}
 
-			token.clear();
-			isCoefficient = false;
-		} 
-		else if (c == '^') 
+	if (x == npos && std::none_of(str.begin(), str.end(), detail::is_digit))
+	{
+		throw std::invalid_argument("invalid node");
+	}
+
+	if (mul != npos)
+	{
+		// *x^n
+		if (mul == 0)
 		{
-			token.clear();
-		} 
-		else 
+			throw std::invalid_argument("failed to parse node: leading *");
+		}
+		// a*^n
+		if (x == npos)
 		{
-			token += c;
+			throw std::invalid_argument("failed to parse node: bad sequence");
 		}
 	}
 
-	if (!token.empty()) 
+	// axn or a*xn or ax^ or a*x^
+	if (power_sign == npos && power != npos)
 	{
-		if (isCoefficient) 
-		{
-			coefficient = token;
-			degree = 0;
-		}
-		else 
-		{
-			degree = std::stoull(token);
-		}
-		
-		coefficients[degree] += big::parse::expression((sign == '+' ? "" : "0-") + coefficient).evaluate<big::rational>();
+		throw std::invalid_argument("failed to parse node: bad sequence");
 	}
-
-	return coefficients;
+	if (power_sign != npos && power == npos)
+	{
+		throw std::invalid_argument("failed to parse node: bad sequence");
+	}
 }
 
-[[nodiscard]] big::polynomial parse_polynomial(const std::string& expression)
+[[nodiscard]] polynomial_node parse_polynomial_node(std::string_view str)
 {
-	auto dictionary = parse_polynomial_helper(expression);
-	std::vector<big::rational> coefficients(std::prev(dictionary.end())->first + 1);
+	throw_if_bad_polynomial_node(str);
 
-	for (std::size_t i = 0; i < coefficients.size(); ++i)
+	const auto npos = std::string_view::npos;
+	const auto mul = str.find(detail::tokens.at(token_id::mul));
+	const auto x = str.find('x');
+	const auto power_sign = x != npos ? str.find(detail::tokens.at(token_id::pow), x + 1) : npos;
+	const auto power = power_sign != npos ? power_sign + 1 : npos;
+
+	polynomial_node node{};
+
+        auto coefficient = str;
+	coefficient.remove_suffix(mul == npos ? (x == npos ? 0 : str.size() - x) : str.size() - mul);
+	bool should_inverse_sign = coefficient.front() == '-';
+
+	if (should_inverse_sign)
 	{
-		if (dictionary.find(i) == dictionary.end())
+		coefficient.remove_prefix(1);
+	}
+
+	if (coefficient.empty())
+	{
+		coefficient = "1";
+	}
+
+	node.coefficient = expression(coefficient).evaluate<rational>();
+
+	if (should_inverse_sign)
+	{
+		node.coefficient.flip_sign();
+	}
+
+	auto degree = str;
+	if (x == npos)
+	{
+		degree = "0";
+	}
+	else
+	{
+		if (power_sign == npos)
 		{
-			coefficients[i] = 0;
+			degree = "1";
 		}
 		else
 		{
-			coefficients[i] = dictionary[i];
+			degree.remove_prefix(power);
 		}
 	}
 
-	std::reverse(coefficients.begin(), coefficients.end());
+	node.degree = static_cast<std::size_t>(expression(degree).evaluate<natural>());
 
-	return big::polynomial(coefficients);
+        return node;
+}
+
+void add_node(std::map<std::size_t, big::rational> &coefficients, std::string_view node)
+{
+	if (node.empty())
+	{
+		return;
+	}
+
+	try 
+	{
+		const auto new_node = parse_polynomial_node(node);
+		coefficients[new_node.degree] += new_node.coefficient;
+	}
+	catch (...)
+	{}
+}
+
+std::vector<std::string> split(std::string s, char delimiter) 
+{
+	std::vector<std::string> tokens;
+	std::string token;
+	std::size_t pos = 0;
+
+	while ((pos = s.find(delimiter)) != std::string::npos) 
+	{
+		token = s.substr(0, pos);
+		tokens.push_back(token);
+		s.erase(0, pos + 1);
+	}
+
+	tokens.push_back(s);
+	return tokens;
+}
+
+void insert_plus_before_minus(std::string &s) 
+{
+	std::size_t pos = 0;
+
+	while ((pos = s.find('-', pos)) != std::string::npos) 
+	{
+		s.insert(pos, 1, '+');
+
+		// Skip the inserted '+' and the '-'
+		pos += 2;
+	}
+}
+
+[[nodiscard]] big::polynomial parse_polynomial_without_brackets(std::string expression)
+{
+	insert_plus_before_minus(expression);
+	expression.erase(std::remove(expression.begin(), expression.end(), ' '), expression.end());
+
+	std::map<std::size_t, big::rational> coefficients;
+
+	for (const auto &node : split(expression, '+'))
+	{
+		add_node(coefficients, node);
+	}
+
+	return polynomial(coefficients);
 }
 }

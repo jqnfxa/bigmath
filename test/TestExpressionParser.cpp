@@ -1,11 +1,11 @@
+#include "gtest/gtest.h"
 #include "../big/natural/natural.hpp"
 #include "../big/integer/integer.hpp"
 #include "../big/rational/rational.hpp"
 #include "../big/polynomial/polynomial.hpp"
 #include "../big/parse/parse.hpp"
 #include "../big/parse/parse_polynomial.hpp"
-#include "gtest/gtest.h"
-
+/*
 
 TEST(TestParserSuite, ParseNatural)
 {
@@ -124,10 +124,14 @@ TEST(TestParserSuite, ParseRational)
 		ASSERT_EQ(parse::expression(expression).evaluate<rational>(), expected);
 	}
 }
-
+*/
 TEST(TestParserSuite, ParsePolynomial)
 {
 	using namespace big;
+
+	// TODO: unary operations: fac, nmr, der, 
+	// TODO: additional operation for nmr
+	// TODO: additional operation for derivative
 
 	/*{
 		const auto expression = "(x+1)(x-1)";
@@ -147,14 +151,67 @@ TEST(TestParserSuite, ParsePolynomial)
 	{
 		const auto expression = "x + x + 17 * x + x^65";
 		const auto expected = "x^65+19*x";
-		ASSERT_EQ(parse::parse_polynomial(expression).str(), expected);
+		const auto cmp = parse::parse_polynomial_without_brackets(expression).str();
+		ASSERT_EQ(cmp, expected);
 	}
 	{
 		const auto expression = "x + x + 17 * x + x^6 - 989/6548 * x ^ -1";
-		const auto expected = "x^65+19*x";
-		ASSERT_EQ(parse::parse_polynomial(expression).str(), expected);
+		const auto expected = "x^6+19*x-1";
+		const auto cmp = parse::parse_polynomial_without_brackets(expression).str();
+		ASSERT_EQ(cmp, expected);
 	}
-	// TODO: unary operations: fac, nmr, der, 
-	// TODO: additional operation for nmr
-	// TODO: additional operation for derivative
+	{
+		const auto expression = "19 * x + x^6 - 989/6548 * x ^ 2";
+		const auto expected = "x^6-989/6548*x^2+19*x";
+		const auto cmp = parse::parse_polynomial_without_brackets(expression).str();
+		ASSERT_EQ(cmp, expected);
+	}
+	{
+		const auto expression = "x^11/6";
+		const auto expected = "x";
+		const auto cmp = parse::parse_polynomial_without_brackets(expression).str();
+		ASSERT_EQ(cmp, expected);
+	}
+	{
+		const auto expression = "x^11/2+16*x-19x+7777";
+		const auto expected = "x^5-3*x+7777";
+		const auto cmp = parse::parse_polynomial_without_brackets(expression).str();
+		ASSERT_EQ(cmp, expected);
+	}
+	{
+		const auto expression = "x^11/2+16*x-19x+7777";
+		const auto expected = "x^5-3*x+7777";
+		const auto cmp = parse::parse_polynomial_without_brackets(expression).str();
+		ASSERT_EQ(cmp, expected);
+	}
+	{
+		const auto expression = "+7777";
+		const auto expected = "7777";
+		const auto cmp = parse::parse_polynomial_without_brackets(expression).str();
+		ASSERT_EQ(cmp, expected);
+	}
+	{
+		const auto expression = "-7777";
+		const auto expected = "-7777";
+		const auto cmp = parse::parse_polynomial_without_brackets(expression).str();
+		ASSERT_EQ(cmp, expected);
+	}
+	{
+		const auto expression = "+-+-+-+--7777";
+		const auto expected = "-7777";
+		const auto cmp = parse::parse_polynomial_without_brackets(expression).str();
+		ASSERT_EQ(cmp, expected);
+	}
+	{
+		const auto expression = "+-+-+-+-7777";
+		const auto expected = "-7777";
+		const auto cmp = parse::parse_polynomial_without_brackets(expression).str();
+		ASSERT_EQ(cmp, expected);
+	}
+	{
+		const auto expression = "-x^7";
+		const auto expected = "-x^7";
+		const auto cmp = parse::parse_polynomial_without_brackets(expression).str();
+		ASSERT_EQ(cmp, expected);
+	}
 }

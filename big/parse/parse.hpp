@@ -255,8 +255,23 @@ public:
 
 		const auto evaluate_operation = [this, &values] (token_id ident)
 		{
-			const T rhs = values.top();
+			T rhs = values.top();
 			values.pop();
+
+			if (values.empty())
+			{
+				switch (ident)
+				{
+				case token_id::sub:
+					rhs = T{} - rhs;
+					break;
+				default:
+					break;
+				}
+
+				return rhs;
+			}
+
 			T lhs = values.top();
 			values.pop();
 
@@ -301,6 +316,8 @@ public:
 			case token_id::shr:
 				lhs >>= static_cast<std::size_t>(rhs);
 				break;
+			default:
+                                break;
 			}
 
 			return lhs;
