@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <vector>
 #include <compare>
-#include <ostream>
+#include <iostream>
 #include <ranges>
 #include <algorithm>
 #include <limits>
@@ -110,18 +110,22 @@ private:
 				divisible += digit;
 			}
 
-			quotient = divisible / second.digits_.front();
+			quotient = divisible / second.digits_.back();
 		}
 		else
 		{
+			// TODO: simplify bounds
 			std::uintmax_t low = 1;
 			std::uintmax_t high = number_system_base;
+			std::uintmax_t mid;
 
 			while (low < high)
 			{
-				const auto mid = (low + high + 1) / 2;
+				mid = (low + high + 1) / 2;
+				natural current = second;
+				current = current.multiply_by_digit(mid);
 
-				if (second * natural(mid) > first)
+				if (current > first)
 				{
 					high = mid - 1;
 				}
