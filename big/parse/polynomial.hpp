@@ -2,11 +2,18 @@
 
 #include "../polynomial/polynomial.hpp"
 #include "../rational/rational.hpp"
-#include "parse.hpp"
+#include "expression.hpp"
 
 
 namespace big::parse
 {
+namespace
+{
+constexpr auto polynomial_parameter_token = 'x';
+constexpr auto add_token = '+';
+constexpr auto sub_token = '-';
+}
+
 struct polynomial_node
 {
 	std::size_t degree;
@@ -22,9 +29,9 @@ void throw_if_bad_polynomial_node(std::string_view str)
 
 	const auto npos = std::string_view::npos;
 	const auto mul = str.find(detail::tokens.at(token_id::mul));
-	const auto x = str.find('x');
-	const auto power_sign = x != npos ? str.find(detail::tokens.at(token_id::pow), x + 1) : npos;
-	const auto power = power_sign != npos ? power_sign + 1 : npos;
+	const auto x = str.find(polynomial_parameter_token);
+	const auto power_sign = x == npos ? npos : str.find(detail::tokens.at(token_id::pow), x + 1);
+	const auto power = power_sign == npos ? npos : power_sign + 1;
 
 	if (mul != npos && x < mul)
 	{
@@ -51,11 +58,7 @@ void throw_if_bad_polynomial_node(std::string_view str)
 	}
 
 	// axn or a*xn or ax^ or a*x^
-	if (power_sign == npos && power != npos)
-	{
-		throw std::invalid_argument("failed to parse node: bad sequence");
-	}
-	if (power_sign != npos && power == npos)
+	if ((power_sign == npos) ^ (power == npos))
 	{
 		throw std::invalid_argument("failed to parse node: bad sequence");
 	}
@@ -67,7 +70,7 @@ void throw_if_bad_polynomial_node(std::string_view str)
 
 	const auto npos = std::string_view::npos;
 	const auto mul = str.find(detail::tokens.at(token_id::mul));
-	const auto x = str.find('x');
+	const auto x = str.find(polynomial_parameter_token);
 	const auto power_sign = x != npos ? str.find(detail::tokens.at(token_id::pow), x + 1) : npos;
 	const auto power = power_sign != npos ? power_sign + 1 : npos;
 
@@ -75,7 +78,7 @@ void throw_if_bad_polynomial_node(std::string_view str)
 
         auto coefficient = str;
 	coefficient.remove_suffix(mul == npos ? (x == npos ? 0 : str.size() - x) : str.size() - mul);
-	bool should_inverse_sign = coefficient.front() == '-';
+	bool should_inverse_sign = coefficient.front() == sub_token;
 
 	if (should_inverse_sign)
 	{
@@ -99,16 +102,13 @@ void throw_if_bad_polynomial_node(std::string_view str)
 	{
 		degree = "0";
 	}
+	else if (power_sign == npos)
+	{
+		degree = "1";
+	}
 	else
 	{
-		if (power_sign == npos)
-		{
-			degree = "1";
-		}
-		else
-		{
-			degree.remove_prefix(power);
-		}
+		degree.remove_prefix(power);
 	}
 
 	node.degree = static_cast<std::size_t>(expression(degree).evaluate<natural>());
@@ -123,22 +123,20 @@ void add_node(std::map<std::size_t, big::rational> &coefficients, std::string_vi
 		return;
 	}
 
-	try 
+	try
 	{
 		const auto new_node = parse_polynomial_node(node);
 		coefficients[new_node.degree] += new_node.coefficient;
 	}
-	catch (...)
-	{}
+	catch (const std::invalid_argument &) {}
 }
 
-std::vector<std::string> split(std::string s, char delimiter) 
+std::vector<std::string> split(std::string s, char delimiter)
 {
 	std::vector<std::string> tokens;
 	std::string token;
-	std::size_t pos = 0;
 
-	while ((pos = s.find(delimiter)) != std::string::npos) 
+	for (std::size_t pos = 0; (pos = s.find(delimiter)) != std::string::npos; )
 	{
 		token = s.substr(0, pos);
 		tokens.push_back(token);
@@ -149,15 +147,13 @@ std::vector<std::string> split(std::string s, char delimiter)
 	return tokens;
 }
 
-void insert_plus_before_minus(std::string &s) 
+void insert_plus_before_minus(std::string &s)
 {
-	std::size_t pos = 0;
-
-	while ((pos = s.find('-', pos)) != std::string::npos) 
+	for (std::size_t pos = 0; (pos = s.find(sub_token, pos)) != std::string::npos; )
 	{
-		s.insert(pos, 1, '+');
+		s.insert(pos, 1, add_token);
 
-		// Skip the inserted '+' and the '-'
+		// skip inserted '+' and '-'
 		pos += 2;
 	}
 }
@@ -165,11 +161,11 @@ void insert_plus_before_minus(std::string &s)
 [[nodiscard]] big::polynomial parse_polynomial_without_brackets(std::string expression)
 {
 	insert_plus_before_minus(expression);
-	expression.erase(std::remove(expression.begin(), expression.end(), ' '), expression.end());
+	expression.erase(std::remove_if(expression.begin(), expression.end(), detail::is_blank), expression.end());
 
 	std::map<std::size_t, big::rational> coefficients;
 
-	for (const auto &node : split(expression, '+'))
+	for (const auto &node : split(expression, add_token))
 	{
 		add_node(coefficients, node);
 	}

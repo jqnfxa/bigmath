@@ -198,42 +198,38 @@ public:
 				rpn.push(token);
 				break;
 
-			case token_id::compound_end:
-				while (!operators.empty())
-				{
-					if (const auto &op = operators.top(); op.ident == token_id::compound_begin)
-					{
-						operators.pop();
-						break;
-					}
-					else
-					{
-						rpn.push(op);
-						operators.pop();
-					}
-				}
-
-				break;
-
 			case token_id::compound_begin:
 				operators.push(token);
 				break;
 
+			case token_id::compound_end:
 			default:
+				const auto is_compound_end = token.ident == token_id::compound_end;
 				while (!operators.empty())
 				{
-					if (const auto &op = operators.top(); detail::is_binary_operator(op.ident) && detail::precedence(op.ident) >= detail::precedence(token.ident))
+					const auto &op = operators.top();
+					const auto is_op_compound_begin = op.ident == token_id::compound_begin;
+					if (is_compound_end && !is_op_compound_begin || detail::is_binary_operator(op.ident) && detail::precedence(op.ident) >= detail::precedence(token.ident))
 					{
 						rpn.push(op);
 						operators.pop();
 					}
 					else
 					{
+						if (is_compound_end && is_op_compound_begin)
+						{
+							operators.pop();
+						}
+
 						break;
 					}
 				}
 
-				operators.push(token);
+				if (detail::is_binary_operator(token.ident))
+				{
+					operators.push(token);
+				}
+
 				break;
 			}
 		}

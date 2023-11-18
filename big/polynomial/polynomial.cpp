@@ -12,7 +12,7 @@ polynomial::polynomial(const std::map<std::size_t, rational> &coefficients)
 	throw_if_empty(coefficients);
 
 	coefficients_.resize(std::prev(coefficients.end())->first + 1);
-	
+
 	for (const auto &[degree, coefficient] : coefficients)
 	{
 		numeric::polynomial::coefficient_at(*this, degree) = coefficient;

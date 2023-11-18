@@ -18,7 +18,7 @@ class polynomial : public conv::stringifiable<polynomial>
 	}
 
 	template <typename T>
-	void throw_if_empty(const T &container)
+	constexpr void throw_if_empty(const T &container) const
 	{
 		if (std::ranges::empty(container))
 		{
