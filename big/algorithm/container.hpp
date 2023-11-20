@@ -46,7 +46,7 @@ constexpr void erase_from_back_while(std::vector<T>& xs, const UnaryPred &pred) 
 };
 
 /**
- * Shifts elements in array forward (to the left)
+ * Shifts elements in array forward.
  *
  * @tparam T Vector value type
  *
