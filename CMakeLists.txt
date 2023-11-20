@@ -16,25 +16,25 @@ include_directories(big/)
 
 # source files
 file(GLOB_RECURSE SOURCES "big/*.cpp")
-add_executable(bignum ${SOURCES} main.cpp)
+add_executable(bigmath ${SOURCES} bigmath.cpp)
 
 # test files
-add_executable(bignum_test big/natural/natural.cpp
-                           big/integer/integer.cpp
-			   big/rational/rational.cpp
-                           big/polynomial/polynomial.cpp
-                           test/TestNatural.cpp
-                           test/TestInteger.cpp
-                           test/TestRational.cpp
-                           test/TestPolynomial.cpp
-                           test/TestAlgorithms.cpp
-                           test/TestExpressionParser.cpp
-                           test/main.cpp)
+add_executable(bigmath_test big/natural/natural.cpp
+                            big/integer/integer.cpp
+			    big/rational/rational.cpp
+                            big/polynomial/polynomial.cpp
+                            test/TestNatural.cpp
+                            test/TestInteger.cpp
+                            test/TestRational.cpp
+                            test/TestPolynomial.cpp
+                            test/TestAlgorithms.cpp
+                            test/TestExpressionParser.cpp
+                            test/main.cpp)
 
 # Link GoogleTest to the test executable
-target_link_libraries(bignum_test PRIVATE gtest GTest::GTest GTest::Main)
+target_link_libraries(bigmath_test PRIVATE gtest GTest::GTest GTest::Main)
 
 # Include GoogleTest's CMake functions
 include(GoogleTest)
 
-gtest_discover_tests(bignum_test)
+gtest_discover_tests(bigmath_test)

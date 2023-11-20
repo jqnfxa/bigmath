@@ -33,7 +33,7 @@ class rational : public conv::stringifiable<rational>
 	 */
 	constexpr void simplify_fraction() & noexcept
 	{
-		const auto coefficient = gcd(numeric::abs(numerator_), numeric::abs(denominator_));
+		const auto coefficient = algorithm::gcd(numeric::abs(numerator_), numeric::abs(denominator_));
 		numerator_ /= coefficient;
 		denominator_ /= coefficient;
 	}

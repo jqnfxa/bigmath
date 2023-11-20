@@ -326,7 +326,7 @@ public:
 				break;
 
 			case token_id::pow:
-				lhs = big::pow(lhs, numeric::rational::numerator(rhs));
+				lhs = algorithm::pow(lhs, numeric::rational::numerator(rhs));
 				break;
 
 			case token_id::mod:
@@ -334,11 +334,11 @@ public:
 				break;
 
 			case token_id::gcd:
-				lhs = gcd(lhs, rhs);
+				lhs = algorithm::gcd(lhs, rhs);
 				break;
 
 			case token_id::lcm:
-				lhs = lcm(lhs, rhs);
+				lhs = algorithm::lcm(lhs, rhs);
 				break;
 
 			case token_id::shl:

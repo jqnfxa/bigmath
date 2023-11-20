@@ -7,7 +7,7 @@
 #include "../traits/traits.hpp"
 
 
-namespace big
+namespace big::algorithm
 {
 /**
  * Calculates the greatest common divisor of two values.
@@ -91,5 +91,21 @@ template <traits::polynomial_like T, traits::integer_like U>
 	}
 
 	return result;
+}
+
+/**
+ * Shifts the number to the left in decimal numeral system.
+ *
+ * @tparam T Base type
+ *
+ * @param base Shift base
+ * @param n    Shift amount
+ *
+ * @return `base` times `10` to the power of `n`
+ */
+template <traits::rational_like T>
+[[nodiscard]] constexpr T decimal_shift(const T &base, std::size_t n)
+{
+	return base * pow(natural{10}, n);
 }
 }

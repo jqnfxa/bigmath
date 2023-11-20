@@ -183,8 +183,8 @@ public:
 		for (auto &coefficient : coefficients_)
 		{
 			scalar *= numeric::sign(coefficient);
-			scalar.numerator() = gcd(numeric::rational::numerator(scalar), numeric::rational::numerator(coefficient));
-			scalar.denominator() = lcm(numeric::rational::denominator(scalar), numeric::rational::denominator(coefficient));
+			scalar.numerator() = algorithm::gcd(numeric::rational::numerator(scalar), numeric::rational::numerator(coefficient));
+			scalar.denominator() = algorithm::lcm(numeric::rational::denominator(scalar), numeric::rational::denominator(coefficient));
 		}
 
 		*this /= scalar;
@@ -208,7 +208,7 @@ public:
 	constexpr polynomial multiple_roots_to_simple() const &
 	{
 		polynomial tmp(*this);
-		tmp /= gcd(tmp, derivative());
+		tmp /= algorithm::gcd(tmp, derivative());
 		tmp.normalize();
 		return tmp;
 	}
