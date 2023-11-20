@@ -55,7 +55,6 @@ public:
 	        return degree() == 0 && numeric::is_zero(major_coefficient());
 	}
 
-
 	/**
 	 * Function returns the major coefficients of the polynomial
 	 *
@@ -298,23 +297,7 @@ public:
 	 */
 	constexpr polynomial &operator<<=(size_type shift) &
 	{
-		const auto &size = std::ranges::size(coefficients_);
-
-		if (size > coefficients_.max_size() - shift)
-		{
-			throw std::length_error("impossible to perform shift without losing data");
-		}
-		if (shift == 0)
-		{
-			return *this;
-		}
-
-		coefficients_.resize(size + shift);
-
-		const auto rbegin = std::ranges::rbegin(coefficients_);
-		std::copy(std::next(rbegin, shift), coefficients_.rend(), rbegin);
-		std::fill_n(coefficients_.begin(), shift, rational{});
-
+		big::algorithm::shift_coefficients(coefficients_, shift);
 		return *this;
 	}
 

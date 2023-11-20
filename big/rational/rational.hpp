@@ -188,11 +188,7 @@ public:
 	template <traits::rational_like T>
 	constexpr rational &operator/=(const T &other) &
 	{
-		if (numeric::sign_bit(other))
-		{
-			flip_sign();
-		}
-
+		numerator_ *= numeric::sign(other);
 		numerator_ *= numeric::rational::denominator(other);
 		denominator_ *= numeric::abs(numeric::rational::numerator(other));
 

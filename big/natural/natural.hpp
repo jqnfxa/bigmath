@@ -606,23 +606,12 @@ public:
 
 	constexpr natural &operator<<=(std::size_t shift) &
 	{
-		const auto &size = std::ranges::size(digits_);
-
-		if (is_zero() || shift == 0)
+		if (is_zero())
 		{
 			return *this;
 		}
 
-		if (size + shift > std::numeric_limits<size_type>::max())
-		{
-			throw std::length_error("impossible to perform shift without losing data");
-		}
-
-		digits_.resize(size + shift);
-
-		std::ranges::copy(digits_ | std::views::reverse | std::views::drop(shift), std::ranges::rbegin(digits_));
-		std::ranges::fill_n(std::ranges::begin(digits_), shift, 0);
-
+		big::algorithm::shift_coefficients(digits_, shift);
 		return *this;
 	}
 
