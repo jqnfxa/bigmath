@@ -82,7 +82,7 @@ template <typename T>
  * @param val Rational-like
  *
  * @return `true` if denominator of `val` is
- *         the multiplicative identity its type
+ *         the multiplicative identity of its type
  *
  * @note INT_Q_B
  */

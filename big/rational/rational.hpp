@@ -11,7 +11,7 @@
 namespace big
 {
 /**
- * Big natural number implementation.
+ * Big rational number implementation.
  */
 class rational : public conv::stringifiable<rational>
 {
@@ -27,7 +27,7 @@ class rational : public conv::stringifiable<rational>
 	}
 
 	/**
-	 * Simplifies a fraction by reducing by the NOD of the numerator and denominator
+	 * Simplifies a fraction by reducing by the GCD of the numerator and denominator.
 	 *
 	 * @note RED_Q_Q
 	 */
@@ -68,7 +68,7 @@ public:
 	/**
 	 * Checks the number for being zero.
 	 *
-	 * @return `true` if the number is a canonical zero, `false` otherwise.
+	 * @return `true` if the number is a canonical zero, `false` otherwise
 	 */
 	[[nodiscard]] constexpr bool is_zero() const noexcept
 	{
@@ -76,7 +76,7 @@ public:
 	}
 
 	/**
-	 * Flips the sign bit
+	 * Flips the sign bit.
 	 */
 	constexpr void flip_sign() & noexcept
 	{
@@ -96,7 +96,7 @@ public:
 	/**
 	 * Gets the numerator of the rational number.
 	 *
-	 * @return numerator as a constant integer reference.
+	 * @return numerator as a constant integer reference
 	 */
 	[[nodiscard]] constexpr const integer &numerator() const noexcept
 	{
@@ -106,7 +106,7 @@ public:
 	/**
 	 * Gets the denominator of the rational number.
 	 *
-	 * @return denominator as a constant natural reference.
+	 * @return denominator as a constant natural reference
 	 */
 	[[nodiscard]] constexpr const natural &denominator() const noexcept
 	{
@@ -116,7 +116,7 @@ public:
 	/**
 	 * Gets the numerator of the rational number.
 	 *
-	 * @return numerator as an integer reference.
+	 * @return numerator as an integer reference
 	 */
 	[[nodiscard]] constexpr integer &numerator() noexcept
 	{
@@ -126,7 +126,7 @@ public:
 	/**
 	 * Gets the denominator of the rational number.
 	 *
-	 * @return denominator as a natural reference.
+	 * @return denominator as a natural reference
 	 */
 	[[nodiscard]] constexpr natural &denominator() noexcept
 	{
@@ -136,7 +136,7 @@ public:
 	/**
 	 * Returns the inverse of the current rational object.
 	 *
-	 * @return A rational number, which is the inverted version of the current object.
+	 * @return A rational number, which is the inverted version of the current object
 	 */
 	[[nodiscard]] constexpr rational inverse() const
 	{

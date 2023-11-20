@@ -46,33 +46,33 @@ constexpr void erase_from_back_while(std::vector<T>& xs, const UnaryPred &pred) 
 };
 
 /**
- * Shifts elements in array forward by shift
+ * Shifts elements in array forward (to the left)
  *
- * @tparam T	Vector value type
+ * @tparam T Vector value type
  *
- * @param xs	Container
- * @param shift shift value to perform
+ * @param xs Container
+ * @param n  Shift amount
  *
- * @throws std::length_error if it is impossible to perform the shift
+ * @throws `std::length_error` if impossible to perform the shift
  */
 template <typename T>
-constexpr void shift_coefficients(std::vector<T>& xs, std::size_t shift)
+constexpr void shift_coefficients(std::vector<T>& xs, std::size_t n)
 {
 	const auto size = std::ranges::size(xs);
 
-	if (size > xs.max_size() - shift)
+	if (size > xs.max_size() - n)
 	{
 		throw std::length_error("impossible to perform shift without losing data");
 	}
 
-	if (shift == 0)
+	if (n == 0)
 	{
 		return;
 	}
 
-	xs.resize(size + shift);
+	xs.resize(size + n);
 
-	std::ranges::copy(xs | std::views::reverse | std::views::drop(shift), std::ranges::rbegin(xs));
+	std::ranges::copy(xs | std::views::reverse | std::views::drop(n), std::ranges::rbegin(xs));
 	std::ranges::fill_n(std::ranges::begin(xs), shift, T{});
 };
 }

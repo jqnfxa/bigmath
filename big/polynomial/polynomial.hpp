@@ -46,7 +46,7 @@ public:
 	[[nodiscard]] explicit polynomial(const std::map<std::size_t, rational> &coefficients);
 
 	/**
-	 * Checks if the polynomial is zero
+	 * Checks if the polynomial is zero.
 	 *
 	 * @return `true` if the polynomial is zero, `false` otherwise
 	 */
@@ -56,9 +56,9 @@ public:
 	}
 
 	/**
-	 * Function returns the major coefficients of the polynomial
+	 * Retrieves the major coefficient of the polynomial
 	 *
-	 * @return major coefficient of the polynomial as a constant reference
+	 * @return Major coefficient of the polynomial
 	 *
 	 * @note LED_P_Q
 	 */
@@ -68,9 +68,9 @@ public:
 	}
 
 	/**
-	 * Get the coefficients of the polynomial
+	 * Gets the coefficients of the polynomial.
 	 *
-	 * @return A vector containing the coefficients of the polynomial
+	 * @return Coefficients
 	 */
 	[[nodiscard]] constexpr const std::vector<rational> &coefficients() const & noexcept
 	{
@@ -78,9 +78,9 @@ public:
 	}
 
 	/**
-	 * Returns the degree of the polynomial
+	 * Returns the degree of the polynomial.
 	 *
-	 * @return polynomial's degree as size_type
+	 * @return Polynomial's degree
 	 *
 	 * @note DEG_P_N
 	 */
@@ -100,11 +100,11 @@ public:
 	}
 
 	/**
-	 * Retrieve rational object corresponding to the polynomial's degree
+	 * Retrieve coefficient corresponding to the given degree.
 	 *
-	 * @param degree The specific degree of the polynomial
+	 * @param degree Given degree
 	 *
-	 * @return rational object at the specific degree
+	 * @return Coefficient at the specified degree
 	 */
 	[[nodiscard]] constexpr rational &at(size_type degree) &
 	{
@@ -132,9 +132,9 @@ public:
 	}
 
 	/**
-	 * Compute the derivative of the polynomial
+	 * Compute the derivative of the polynomial.
 	 *
-	 * @return derivative of the polynomial as a new polynomial object
+	 * @return Derivative of the polynomial
 	 *
 	 * @note DER_P_P
 	 */
@@ -157,10 +157,9 @@ public:
 	}
 
 	/**
-	 * Returns a normalized version of the polynomial
-	 * This function does not modify the original polynomial but returns a normalized copy.
+	 * Returns a normalized version of the polynomial.
 	 *
-	 * @return Normalized version of the given polynomial
+	 * @return Normalized version of the polynomial
 	 *
 	 * @note FAC_P_Q
 	 */
@@ -173,8 +172,8 @@ public:
 
 	/**
 	 * Normalizes a polynomial by dividing by a rational number
-	 * whose numerator is the NOD of all numerators of the coefficients of the polynomial,
-	 * and whose denominator is the NOC of all denominators of the coefficients of the polynomial
+	 * whose numerator is the GCD of all numerators of the coefficients of the polynomial,
+	 * and whose denominator is the LCM of all denominators of the coefficients of the polynomial
 	 */
 	constexpr void normalize() &
 	{
@@ -291,7 +290,7 @@ public:
 	 *
 	 * @param shift The number of positions 'k' by which the polynomial is to be shifted higher.
 	 *
-	 * @return Reference to the polynomial after being shifted.
+	 * @return Reference to instance
 	 *
 	 * @note MUL_Pxk_P
 	 */
@@ -344,7 +343,7 @@ public:
 	}
 
 	/**
-	 * Performs polynomial long division and returns the quotient and the remainder
+	 * Performs polynomial long division and returns the quotient and the remainder.
 	 *
 	 * @param divisor The divisor polynomial for the division
 	 *
