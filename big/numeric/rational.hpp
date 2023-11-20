@@ -29,6 +29,8 @@ concept member_denominator = requires (T t)
  * @param val Rational-like
  *
  * @return Numerator of `val`
+ *
+ * @note TRANS_Q_Z
  */
 template <typename T>
 [[nodiscard]] constexpr decltype(auto) numerator(const T &val) noexcept
@@ -81,6 +83,8 @@ template <typename T>
  *
  * @return `true` if denominator of `val` is
  *         the multiplicative identity its type
+ *
+ * @note INT_Q_B
  */
 template <typename T>
 [[nodiscard]] constexpr bool is_integer(const T &val) noexcept

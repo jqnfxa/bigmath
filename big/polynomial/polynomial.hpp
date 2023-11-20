@@ -60,6 +60,8 @@ public:
 	 * Function returns the major coefficients of the polynomial
 	 *
 	 * @return major coefficient of the polynomial as a constant reference
+	 *
+	 * @note LED_P_Q
 	 */
 	[[nodiscard]] constexpr const rational &major_coefficient() const & noexcept
 	{
@@ -80,6 +82,8 @@ public:
 	 * Returns the degree of the polynomial
 	 *
 	 * @return polynomial's degree as size_type
+	 *
+	 * @note DEG_P_N
 	 */
 	[[nodiscard]] constexpr size_type degree() const & noexcept
 	{
@@ -100,6 +104,7 @@ public:
 	 * Retrieve rational object corresponding to the polynomial's degree
 	 *
 	 * @param degree The specific degree of the polynomial
+	 *
 	 * @return rational object at the specific degree
 	 */
 	[[nodiscard]] constexpr rational &at(size_type degree) &
@@ -131,6 +136,8 @@ public:
 	 * Compute the derivative of the polynomial
 	 *
 	 * @return derivative of the polynomial as a new polynomial object
+	 *
+	 * @note DER_P_P
 	 */
 	[[nodiscard]] constexpr polynomial derivative() const noexcept
 	{
@@ -155,6 +162,8 @@ public:
 	 * This function does not modify the original polynomial but returns a normalized copy.
 	 *
 	 * @return Normalized version of the given polynomial
+	 *
+	 * @note FAC_P_Q
 	 */
 	constexpr polynomial normalized() const
 	{
@@ -194,6 +203,8 @@ public:
 	 *    of all denominators of the coefficients of the polynomial
 	 *
 	 * @return The resultant polynomial after performing the above operations
+	 *
+	 * @note NMR_P_P
 	 */
 	constexpr polynomial multiple_roots_to_simple() const &
 	{
@@ -203,6 +214,9 @@ public:
 		return tmp;
 	}
 
+	/**
+	 * @note ADD_PP_P
+	 */
 	constexpr polynomial &operator+=(const polynomial &other) & noexcept
 	{
 		const auto other_degree = other.degree();
@@ -217,6 +231,9 @@ public:
 		return *this;
 	}
 
+	/**
+	 * @note SUB_PP_P
+	 */
 	constexpr polynomial &operator-=(const polynomial &other) & noexcept
 	{
 		*this *= -1;
@@ -226,6 +243,9 @@ public:
 		return *this;
 	}
 
+	/**
+	 * @note MUL_PP_P
+	 */
 	constexpr polynomial &operator*=(const polynomial &other) & noexcept
 	{
 		const auto &cur_len = std::ranges::size(coefficients_);
@@ -247,12 +267,18 @@ public:
 		return *this;
 	}
 
+	/**
+	 * @note DIV_PP_P
+	 */
 	constexpr polynomial &operator/=(const polynomial &other) &
 	{
 		*this = long_div(other).first;
 		return *this;
 	}
 
+	/**
+	 * @note MOD_PP_P
+	 */
 	constexpr polynomial &operator%=(const polynomial &other) &
 	{
 		*this = long_div(other).second;
@@ -265,7 +291,10 @@ public:
 	 * which is equivalent to multiplying it by x^k.
 	 *
 	 * @param shift The number of positions 'k' by which the polynomial is to be shifted higher.
+	 *
 	 * @return Reference to the polynomial after being shifted.
+	 *
+	 * @note MUL_Pxk_P
 	 */
 	constexpr polynomial &operator<<=(size_type shift) &
 	{
@@ -335,6 +364,7 @@ public:
 	 * Performs polynomial long division and returns the quotient and the remainder
 	 *
 	 * @param divisor The divisor polynomial for the division
+	 *
 	 * @return A pair of polynomials where the first element is the quotient and the second element is the remainder
 	 */
 	[[nodiscard]] constexpr std::pair<polynomial, polynomial> long_div(const polynomial &divisor) const &
@@ -373,6 +403,9 @@ public:
 		return {quotient, remainder};
 	}
 
+	/**
+	 * @note MUL_PQ_P
+	 */
 	template <traits::rational_like T>
 	constexpr polynomial &operator*=(const T &scalar) & noexcept
 	{

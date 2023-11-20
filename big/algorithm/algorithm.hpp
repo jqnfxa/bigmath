@@ -18,6 +18,8 @@ namespace big
  * @param b Polynomial-like
  *
  * @return Greatest common divisor of `a` and `b`
+ *
+ * @note GCF_NN_N | GCF_PP_P
  */
 template <traits::polynomial_like T>
 [[nodiscard]] constexpr T gcd(const T &a, const T &b) noexcept
@@ -42,6 +44,8 @@ template <traits::polynomial_like T>
  * @param b Polynomial-like
  *
  * @return Least common multiple of `a` and `b`
+ *
+ * @note LCM_NN_N
  */
 template <traits::polynomial_like T>
 [[nodiscard]] constexpr T lcm(const T &a, const T &b)

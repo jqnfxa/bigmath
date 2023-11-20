@@ -133,6 +133,8 @@ private:
 	 * @param digit Digit value
 	 *
 	 * @return Reference to the instance
+	 *
+	 * @note MUL_ND_N
 	 */
 	[[nodiscard]] constexpr natural &mul_digit(const digit_type digit)
 	{
@@ -406,6 +408,8 @@ public:
 	 * Checks the number for being equal to the canonical zero.
 	 *
 	 * @return `true` if the number is zero, `false` otherwise
+	 *
+	 * @note NZER_N_B
 	 */
 	[[nodiscard]] constexpr bool is_zero() const noexcept
 	{
@@ -488,6 +492,10 @@ public:
 		return *this <=> other == std::strong_ordering::equal;
 	}
 
+
+	/**
+	 * @note ADD_1N_N
+	 */
 	constexpr natural &operator++() &
 	{
 		return *this += 1;
@@ -512,6 +520,9 @@ public:
 		return tmp;
 	}
 
+	/**
+	 * @note ADD_NN_N
+	 */
 	constexpr natural &operator+=(const natural &other) &
 	{
 		if (this == &other)
@@ -536,6 +547,9 @@ public:
 		return *this;
 	}
 
+	/**
+	 * @note SUB_NN_N
+	 */
 	constexpr natural &operator-=(const natural &other) &
 	{
 		if (other > *this)
@@ -563,18 +577,27 @@ public:
 		return *this;
 	}
 
+	/**
+	 * @note MUL_NN_N
+	 */
 	constexpr natural &operator*=(const natural &other) &
 	{
 		*this = karatsuba_mul(*this, other);
 		return *this;
 	}
 
+	/**
+	 * @note DIV_NN_N
+	 */
 	constexpr natural &operator/=(const natural &other) &
 	{
 		digits_ = long_div(other).first.digits_;
 		return *this;
 	}
 
+	/**
+	 * @note MOD_NN_N
+	 */
 	constexpr natural &operator%=(const natural &other) &
 	{
 		digits_ = long_div(other).second.digits_;

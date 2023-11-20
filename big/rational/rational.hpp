@@ -28,6 +28,8 @@ class rational : public conv::stringifiable<rational>
 
 	/**
 	 * Simplifies a fraction by reducing by the NOD of the numerator and denominator
+	 *
+	 * @note RED_Q_Q
 	 */
 	constexpr void simplify_fraction() & noexcept
 	{
@@ -37,6 +39,9 @@ class rational : public conv::stringifiable<rational>
 	}
 
 public:
+	/**
+	 * @note TRANS_Z_Q
+	 */
 	template <traits::integer_like T = std::intmax_t, traits::integer_like U = std::uintmax_t>
 	[[nodiscard]] constexpr rational(const T &numerator = 0, const U &denominator = 1)
 		: numerator_(numeric::abs(numerator), numeric::sign_bit(numerator) ^ numeric::sign_bit(denominator))
@@ -138,6 +143,9 @@ public:
 		return rational(denominator_, numerator_);
 	}
 
+	/**
+	 * @note ADD_QQ_Q
+	 */
 	template <traits::rational_like T>
 	constexpr rational &operator+=(const T &other) & noexcept
 	{
@@ -148,6 +156,9 @@ public:
 		return *this;
 	}
 
+	/**
+	 * @note SUB_QQ_Q
+	 */
 	template <traits::rational_like T>
 	constexpr rational &operator-=(const T &other) & noexcept
 	{
@@ -158,6 +169,9 @@ public:
 		return *this;
 	}
 
+	/**
+	 * @note MUL_QQ_Q
+	 */
 	template <traits::rational_like T>
 	constexpr rational &operator*=(const T &other) & noexcept
 	{
@@ -168,6 +182,9 @@ public:
 		return *this;
 	}
 
+	/**
+	 * @note DIV_QQ_Q
+	 */
 	template <traits::rational_like T>
 	constexpr rational &operator/=(const T &other) &
 	{

@@ -106,6 +106,8 @@ public:
 
 	/**
 	 * Flips the sign bit.
+	 *
+	 * @note MUL_ZM_Z
 	 */
 	constexpr void flip_sign() & noexcept
 	{
@@ -116,6 +118,8 @@ public:
 	 * Gets the absolute value.
 	 *
 	 * @return Absolute value
+	 *
+	 * @note ABS_Z_N
 	 */
 	[[nodiscard]] constexpr const natural &abs() const noexcept
 	{
@@ -166,18 +170,27 @@ public:
 		return tmp;
 	}
 
+	/**
+	 * @note ADD_ZZ_Z
+	 */
 	template <traits::integer_like T>
 	constexpr integer &operator+=(const T &other) &
 	{
 		return add(other, std::ranges::equal_to{});
 	}
 
+	/**
+	 * @note SUB_ZZ_Z
+	 */
 	template <traits::integer_like T>
 	constexpr integer &operator-=(const T &other) &
 	{
 		return add(other, std::ranges::not_equal_to{});
 	}
 
+	/**
+	 * @note MUL_ZZ_Z
+	 */
 	template <traits::integer_like T>
 	constexpr integer &operator*=(const T &other) &
 	{
@@ -188,6 +201,9 @@ public:
 		return *this;
 	}
 
+	/**
+	 * @note DIV_ZZ_Z
+	 */
 	template <traits::integer_like T>
 	constexpr integer &operator/=(const T &other) &
 	{
@@ -198,6 +214,9 @@ public:
 		return *this;
 	}
 
+	/**
+	 * @note MOD_ZZ_Z
+	 */
 	template <traits::integer_like T>
 	constexpr integer &operator%=(const T &other) &
 	{
