@@ -7,8 +7,17 @@
 
 namespace big::algorithm
 {
+/**
+ * Erases leading elements from back while given predicate is true.
+ *
+ * @tparam T	Vector value type
+ * @tparam UnaryPred Predicate type
+ *
+ * @param xs	Container
+ * @param pred Unary predicate
+ */
 template <typename T, typename UnaryPred>
-constexpr void erase_leading_up_to_last_if(std::vector<T>& xs, const UnaryPred &pred) noexcept
+constexpr void erase_from_back_while(std::vector<T>& xs, const UnaryPred &pred) noexcept
 {
 	namespace ranges = std::ranges;
 
@@ -34,5 +43,36 @@ constexpr void erase_leading_up_to_last_if(std::vector<T>& xs, const UnaryPred &
 
 	const auto distance = ranges::distance(ranges::rbegin(xs), last);
 	xs.erase(ranges::next(ranges::begin(xs), ranges::size(xs) - distance), ranges::end(xs));
+};
+
+/**
+ * Shifts elements in array forward.
+ *
+ * @tparam T Vector value type
+ *
+ * @param xs Container
+ * @param n  Shift amount
+ *
+ * @throws `std::length_error` if impossible to perform the shift
+ */
+template <typename T>
+constexpr void shift_coefficients(std::vector<T>& xs, std::size_t n)
+{
+	const auto size = std::ranges::size(xs);
+
+	if (size > xs.max_size() - n)
+	{
+		throw std::length_error("impossible to perform shift without losing data");
+	}
+
+	if (n == 0)
+	{
+		return;
+	}
+
+	xs.resize(size + n);
+
+	std::ranges::copy(xs | std::views::reverse | std::views::drop(n), std::ranges::rbegin(xs));
+	std::ranges::fill_n(std::ranges::begin(xs), shift, T{});
 };
 }

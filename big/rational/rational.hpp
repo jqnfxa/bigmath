@@ -7,8 +7,12 @@
 #include "../integer/integer.hpp"
 #include "../algorithm/algorithm.hpp"
 
+
 namespace big
 {
+/**
+ * Big rational number implementation.
+ */
 class rational : public conv::stringifiable<rational>
 {
 	integer numerator_;
@@ -22,13 +26,22 @@ class rational : public conv::stringifiable<rational>
 		}
 	}
 
+	/**
+	 * Simplifies a fraction by reducing by the GCD of the numerator and denominator.
+	 *
+	 * @note RED_Q_Q
+	 */
 	constexpr void simplify_fraction() & noexcept
 	{
-		const auto coefficient = gcd(numeric::abs(numerator_), numeric::abs(denominator_));
+		const auto coefficient = algorithm::gcd(numeric::abs(numerator_), numeric::abs(denominator_));
 		numerator_ /= coefficient;
 		denominator_ /= coefficient;
 	}
+
 public:
+	/**
+	 * @note TRANS_Z_Q
+	 */
 	template <traits::integer_like T = std::intmax_t, traits::integer_like U = std::uintmax_t>
 	[[nodiscard]] constexpr rational(const T &numerator = 0, const U &denominator = 1)
 		: numerator_(numeric::abs(numerator), numeric::sign_bit(numerator) ^ numeric::sign_bit(denominator))
@@ -52,46 +65,87 @@ public:
 		return *this <=> other == std::strong_ordering::equal;
 	}
 
+	/**
+	 * Checks the number for being zero.
+	 *
+	 * @return `true` if the number is a canonical zero, `false` otherwise
+	 */
 	[[nodiscard]] constexpr bool is_zero() const noexcept
 	{
 		return numeric::is_zero(numerator_);
 	}
 
+	/**
+	 * Flips the sign bit.
+	 */
 	constexpr void flip_sign() & noexcept
 	{
 		return numerator_.flip_sign();
 	}
 
+	/**
+	 * Gets the sign bit.
+	 *
+	 * @return 'true' if the sign is set, 'false' otherwise
+	 */
 	[[nodiscard]] constexpr bool sign_bit() const noexcept
 	{
 		return numeric::sign_bit(numerator_);
 	}
 
+	/**
+	 * Gets the numerator of the rational number.
+	 *
+	 * @return numerator as a constant integer reference
+	 */
 	[[nodiscard]] constexpr const integer &numerator() const noexcept
 	{
 		return numerator_;
 	}
 
+	/**
+	 * Gets the denominator of the rational number.
+	 *
+	 * @return denominator as a constant natural reference
+	 */
 	[[nodiscard]] constexpr const natural &denominator() const noexcept
 	{
 		return denominator_;
 	}
 
+	/**
+	 * Gets the numerator of the rational number.
+	 *
+	 * @return numerator as an integer reference
+	 */
 	[[nodiscard]] constexpr integer &numerator() noexcept
 	{
 		return const_cast<integer &>(const_cast<const rational *>(this)->numerator());
 	}
 
+	/**
+	 * Gets the denominator of the rational number.
+	 *
+	 * @return denominator as a natural reference
+	 */
 	[[nodiscard]] constexpr natural &denominator() noexcept
 	{
 		return const_cast<natural &>(const_cast<const rational *>(this)->denominator());
 	}
 
+	/**
+	 * Returns the inverse of the current rational object.
+	 *
+	 * @return A rational number, which is the inverted version of the current object
+	 */
 	[[nodiscard]] constexpr rational inverse() const
 	{
 		return rational(denominator_, numerator_);
 	}
 
+	/**
+	 * @note ADD_QQ_Q
+	 */
 	template <traits::rational_like T>
 	constexpr rational &operator+=(const T &other) & noexcept
 	{
@@ -102,6 +156,9 @@ public:
 		return *this;
 	}
 
+	/**
+	 * @note SUB_QQ_Q
+	 */
 	template <traits::rational_like T>
 	constexpr rational &operator-=(const T &other) & noexcept
 	{
@@ -112,6 +169,9 @@ public:
 		return *this;
 	}
 
+	/**
+	 * @note MUL_QQ_Q
+	 */
 	template <traits::rational_like T>
 	constexpr rational &operator*=(const T &other) & noexcept
 	{
@@ -122,14 +182,13 @@ public:
 		return *this;
 	}
 
+	/**
+	 * @note DIV_QQ_Q
+	 */
 	template <traits::rational_like T>
 	constexpr rational &operator/=(const T &other) &
 	{
-		if (numeric::sign_bit(other))
-		{
-			flip_sign();
-		}
-
+		numerator_ *= numeric::sign(other);
 		numerator_ *= numeric::rational::denominator(other);
 		denominator_ *= numeric::abs(numeric::rational::numerator(other));
 

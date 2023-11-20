@@ -9,6 +9,14 @@ template <typename T>
 class stringifiable
 {
 public:
+	/**
+	 * Stringifies the instance.
+	 *
+	 * @return String representation of the class instance
+	 *
+	 * @note This invokes argument-dependent look up for the
+	 *       overload of operator<< for `std::stringstream`.
+	 */
 	[[nodiscard]] std::string str() const &
 	{
 		std::stringstream ss;

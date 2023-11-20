@@ -4,18 +4,31 @@
 #include "../numeric/numeric.hpp"
 #include "../numeric/polynomial.hpp"
 #include "../algorithm/container.hpp"
+#include <map>
+
 
 namespace big
 {
+/**
+ * Big polynomial implementation.
+ */
 class polynomial : public conv::stringifiable<polynomial>
 {
 	std::vector<rational> coefficients_;
 
 	constexpr void erase_leading_zeroes() &
 	{
-		return algorithm::erase_leading_up_to_last_if(coefficients_, numeric::is_zero<typename decltype(coefficients_)::value_type>);
+		return algorithm::erase_from_back_while(coefficients_, numeric::is_zero<typename decltype(coefficients_)::value_type>);
 	}
 
+	template <typename T>
+	constexpr void throw_if_empty(const T &container) const
+	{
+		if (std::ranges::empty(container))
+		{
+			throw std::invalid_argument("coefficients cannot be empty");
+		}
+	}
 public:
 	using size_type = std::size_t;
 
@@ -25,33 +38,55 @@ public:
 
 	[[nodiscard]] constexpr explicit polynomial(const std::vector<rational> &coefficients)
 	{
-		if (std::ranges::empty(coefficients))
-		{
-			throw std::invalid_argument("coefficients cannot be empty");
-		}
-
+		throw_if_empty(coefficients);
 		coefficients_.assign(std::ranges::rbegin(coefficients), std::ranges::rend(coefficients));
 		erase_leading_zeroes();
 	}
 
+	[[nodiscard]] explicit polynomial(const std::map<std::size_t, rational> &coefficients);
+
+	/**
+	 * Checks if the polynomial is zero.
+	 *
+	 * @return `true` if the polynomial is zero, `false` otherwise
+	 */
 	[[nodiscard]] constexpr bool is_zero() const & noexcept
 	{
-                return degree() == 0 && numeric::is_zero(major_coefficient());
-        }
+	        return degree() == 0 && numeric::is_zero(major_coefficient());
+	}
 
+	/**
+	 * Retrieves the major coefficient of the polynomial
+	 *
+	 * @return Major coefficient of the polynomial
+	 *
+	 * @note LED_P_Q
+	 */
 	[[nodiscard]] constexpr const rational &major_coefficient() const & noexcept
 	{
-                return coefficients_.back();
-        }
+	        return coefficients_.back();
+	}
 
+	/**
+	 * Gets the coefficients of the polynomial.
+	 *
+	 * @return Coefficients
+	 */
 	[[nodiscard]] constexpr const std::vector<rational> &coefficients() const & noexcept
 	{
 		return coefficients_;
 	}
 
+	/**
+	 * Returns the degree of the polynomial.
+	 *
+	 * @return Polynomial's degree
+	 *
+	 * @note DEG_P_N
+	 */
 	[[nodiscard]] constexpr size_type degree() const & noexcept
 	{
-		return std::ranges::size(coefficients_) - 1;
+	    return std::ranges::size(coefficients_) - 1;
 	}
 
 	[[nodiscard]] constexpr std::strong_ordering operator<=>(const polynomial &other) const & noexcept
@@ -64,6 +99,13 @@ public:
 		return *this <=> other == std::strong_ordering::equal;
 	}
 
+	/**
+	 * Retrieve coefficient corresponding to the given degree.
+	 *
+	 * @param degree Given degree
+	 *
+	 * @return Coefficient at the specified degree
+	 */
 	[[nodiscard]] constexpr rational &at(size_type degree) &
 	{
 		return const_cast<rational &>(const_cast<const polynomial *>(this)->at(degree));
@@ -89,6 +131,13 @@ public:
 		return at(degree);
 	}
 
+	/**
+	 * Compute the derivative of the polynomial.
+	 *
+	 * @return Derivative of the polynomial
+	 *
+	 * @note DER_P_P
+	 */
 	[[nodiscard]] constexpr polynomial derivative() const noexcept
 	{
 		polynomial der(*this);
@@ -107,6 +156,13 @@ public:
 		return der;
 	}
 
+	/**
+	 * Returns a normalized version of the polynomial.
+	 *
+	 * @return Normalized version of the polynomial
+	 *
+	 * @note FAC_P_Q
+	 */
 	constexpr polynomial normalized() const
 	{
 		polynomial tmp(*this);
@@ -114,6 +170,11 @@ public:
 		return tmp;
 	}
 
+	/**
+	 * Normalizes a polynomial by dividing by a rational number
+	 * whose numerator is the GCD of all numerators of the coefficients of the polynomial,
+	 * and whose denominator is the LCM of all denominators of the coefficients of the polynomial
+	 */
 	constexpr void normalize() &
 	{
 		auto scalar = numeric::polynomial::coefficient_at(*this, 0);
@@ -121,21 +182,39 @@ public:
 		for (auto &coefficient : coefficients_)
 		{
 			scalar *= numeric::sign(coefficient);
-			scalar.numerator() = gcd(numeric::rational::numerator(scalar), numeric::rational::numerator(coefficient));
-			scalar.denominator() = lcm(numeric::rational::denominator(scalar), numeric::rational::denominator(coefficient));
+			scalar.numerator() = algorithm::gcd(numeric::rational::numerator(scalar), numeric::rational::numerator(coefficient));
+			scalar.denominator() = algorithm::lcm(numeric::rational::denominator(scalar), numeric::rational::denominator(coefficient));
 		}
 
 		*this /= scalar;
 	}
 
+	/**
+	 * Convert polynomials with multiple roots to one with simple roots.
+	 *
+	 * This function performs the following operations sequentially:
+	 * 1. Creates a temporary copy of the given polynomial
+	 * 2. Divides the copied polynomial by the GCD of itself and its derivative
+	 * 3. Normalizes the copied polynomial i.e., divides the polynomial by
+	 *    a rational number whose numerator is the GCD of all numerators of
+	 *    the coefficients of the polynomial and whose denominator is the LCM
+	 *    of all denominators of the coefficients of the polynomial
+	 *
+	 * @return The resultant polynomial after performing the above operations
+	 *
+	 * @note NMR_P_P
+	 */
 	constexpr polynomial multiple_roots_to_simple() const &
 	{
 		polynomial tmp(*this);
-		tmp /= gcd(tmp, derivative());
+		tmp /= algorithm::gcd(tmp, derivative());
 		tmp.normalize();
 		return tmp;
 	}
 
+	/**
+	 * @note ADD_PP_P
+	 */
 	constexpr polynomial &operator+=(const polynomial &other) & noexcept
 	{
 		const auto other_degree = other.degree();
@@ -150,6 +229,9 @@ public:
 		return *this;
 	}
 
+	/**
+	 * @note SUB_PP_P
+	 */
 	constexpr polynomial &operator-=(const polynomial &other) & noexcept
 	{
 		*this *= -1;
@@ -159,6 +241,9 @@ public:
 		return *this;
 	}
 
+	/**
+	 * @note MUL_PP_P
+	 */
 	constexpr polynomial &operator*=(const polynomial &other) & noexcept
 	{
 		const auto &cur_len = std::ranges::size(coefficients_);
@@ -180,37 +265,38 @@ public:
 		return *this;
 	}
 
+	/**
+	 * @note DIV_PP_P
+	 */
 	constexpr polynomial &operator/=(const polynomial &other) &
 	{
 		*this = long_div(other).first;
 		return *this;
 	}
 
+	/**
+	 * @note MOD_PP_P
+	 */
 	constexpr polynomial &operator%=(const polynomial &other) &
 	{
 		*this = long_div(other).second;
 		return *this;
 	}
 
+	/**
+	 * Performs multiplication of a polynomial by x^k.
+	 * The method shifts a polynomial up by adding k zeros at the beginning of the polynomial,
+	 * which is equivalent to multiplying it by x^k.
+	 *
+	 * @param shift The number of positions 'k' by which the polynomial is to be shifted higher.
+	 *
+	 * @return Reference to instance
+	 *
+	 * @note MUL_Pxk_P
+	 */
 	constexpr polynomial &operator<<=(size_type shift) &
 	{
-		const auto &size = std::ranges::size(coefficients_);
-
-		if (size > coefficients_.max_size() - shift)
-		{
-			throw std::length_error("impossible to perform shift without losing data");
-		}
-		if (shift == 0)
-		{
-			return *this;
-		}
-
-		coefficients_.resize(size + shift);
-
-		const auto rbegin = std::ranges::rbegin(coefficients_);
-		std::copy(std::next(rbegin, shift), coefficients_.rend(), rbegin);
-		std::fill_n(coefficients_.begin(), shift, rational{});
-
+		big::algorithm::shift_coefficients(coefficients_, shift);
 		return *this;
 	}
 
@@ -256,6 +342,13 @@ public:
 		return tmp;
 	}
 
+	/**
+	 * Performs polynomial long division and returns the quotient and the remainder.
+	 *
+	 * @param divisor The divisor polynomial for the division
+	 *
+	 * @return A pair of polynomials where the first element is the quotient and the second element is the remainder
+	 */
 	[[nodiscard]] constexpr std::pair<polynomial, polynomial> long_div(const polynomial &divisor) const &
 	{
 		if (numeric::is_zero(numeric::polynomial::degree(divisor)) && numeric::is_zero(divisor.major_coefficient()))
@@ -292,6 +385,9 @@ public:
 		return {quotient, remainder};
 	}
 
+	/**
+	 * @note MUL_PQ_P
+	 */
 	template <traits::rational_like T>
 	constexpr polynomial &operator*=(const T &scalar) & noexcept
 	{

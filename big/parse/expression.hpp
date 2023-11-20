@@ -98,6 +98,13 @@ enum class operator_precedence : unsigned char
 	return is_binary_operator(id) && !is_additive_operator(id);
 }
 
+/**
+ * Returns the precedence of an operator token.
+ *
+ * @param id operator token ID
+ *
+ * @return Operator precedence
+ */
 [[nodiscard]] operator_precedence precedence(token_id id) noexcept
 {
 	switch (id)
@@ -123,6 +130,13 @@ enum class operator_precedence : unsigned char
 	}
 }
 
+/**
+ * Matches a token string with a token ID.
+ *
+ * @param str Token string
+ *
+ * @return token ID
+ */
 [[nodiscard]] token_id match_token(std::string_view str) noexcept
 {
 	if (std::all_of(str.begin(), str.end(), detail::is_digit))
@@ -142,11 +156,21 @@ enum class operator_precedence : unsigned char
 }
 }
 
+/**
+ * Expression parser and evaluator.
+ */
 class expression
 {
 	std::string_view expression_;
 
 protected:
+	/**
+	 * Parse one token and return it.
+	 *
+	 * @return Next token
+	 *
+	 * @note This advances `expression_` by the token size.
+	 */
 	token_info next()
 	{
 		if (expression_.empty())
@@ -185,6 +209,11 @@ public:
 		: expression_(expression)
 	{}
 
+	/**
+	 * Parses the expression string.
+	 *
+	 * @return Token queue
+	 */
 	[[nodiscard]] std::queue<token_info> parse()
 	{
 		std::queue<token_info> rpn;
@@ -198,42 +227,38 @@ public:
 				rpn.push(token);
 				break;
 
-			case token_id::compound_end:
-				while (!operators.empty())
-				{
-					if (const auto &op = operators.top(); op.ident == token_id::compound_begin)
-					{
-						operators.pop();
-						break;
-					}
-					else
-					{
-						rpn.push(op);
-						operators.pop();
-					}
-				}
-
-				break;
-
 			case token_id::compound_begin:
 				operators.push(token);
 				break;
 
+			case token_id::compound_end:
 			default:
+				const auto is_compound_end = token.ident == token_id::compound_end;
 				while (!operators.empty())
 				{
-					if (const auto &op = operators.top(); detail::is_binary_operator(op.ident) && detail::precedence(op.ident) >= detail::precedence(token.ident))
+					const auto &op = operators.top();
+					const auto is_op_compound_begin = op.ident == token_id::compound_begin;
+					if (is_compound_end && !is_op_compound_begin || detail::is_binary_operator(op.ident) && detail::precedence(op.ident) >= detail::precedence(token.ident))
 					{
 						rpn.push(op);
 						operators.pop();
 					}
 					else
 					{
+						if (is_compound_end && is_op_compound_begin)
+						{
+							operators.pop();
+						}
+
 						break;
 					}
 				}
 
-				operators.push(token);
+				if (detail::is_binary_operator(token.ident))
+				{
+					operators.push(token);
+				}
+
 				break;
 			}
 		}
@@ -247,6 +272,13 @@ public:
 		return rpn;
 	}
 
+	/**
+	 * Parses and evaluates the expression string.
+	 *
+	 * @tparam T Return type
+	 *
+	 * @return Expression evaluation result
+	 */
 	template <traits::rational_like T>
 	[[nodiscard]] T evaluate()
 	{
@@ -255,8 +287,23 @@ public:
 
 		const auto evaluate_operation = [this, &values] (token_id ident)
 		{
-			const T rhs = values.top();
+			T rhs = values.top();
 			values.pop();
+
+			if (values.empty())
+			{
+				switch (ident)
+				{
+				case token_id::sub:
+					rhs = T{} - rhs;
+					break;
+				default:
+					break;
+				}
+
+				return rhs;
+			}
+
 			T lhs = values.top();
 			values.pop();
 
@@ -279,7 +326,7 @@ public:
 				break;
 
 			case token_id::pow:
-				lhs = big::pow(lhs, numeric::rational::numerator(rhs));
+				lhs = algorithm::pow(lhs, numeric::rational::numerator(rhs));
 				break;
 
 			case token_id::mod:
@@ -287,11 +334,11 @@ public:
 				break;
 
 			case token_id::gcd:
-				lhs = gcd(lhs, rhs);
+				lhs = algorithm::gcd(lhs, rhs);
 				break;
 
 			case token_id::lcm:
-				lhs = lcm(lhs, rhs);
+				lhs = algorithm::lcm(lhs, rhs);
 				break;
 
 			case token_id::shl:
@@ -301,6 +348,8 @@ public:
 			case token_id::shr:
 				lhs >>= static_cast<std::size_t>(rhs);
 				break;
+			default:
+                                break;
 			}
 
 			return lhs;

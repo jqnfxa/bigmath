@@ -23,10 +23,20 @@ concept member_at = requires (T t, std::size_t pos)
 template <typename T>
 concept member_degree = requires (T t)
 {
-	{ t.degree() } -> std::same_as<std::size_t>;
+	{ t.degree() } -> std::unsigned_integral;
 };
 }
 
+/**
+ * Retrieves the degree of given polynomial.
+ *
+ * @tparam T Value type
+ *
+ * @param val Polynomial-like
+ *
+ * @return `val.degree()` if `val` has a member function `degree()`
+ *         that returns an unsigned integral, `0` otherwise
+ */
 template <typename T>
 [[nodiscard]] constexpr std::size_t degree(const T &val) noexcept
 {
@@ -35,14 +45,25 @@ template <typename T>
 		return val.degree();
 	}
 	else
-	if constexpr (traits::rational_like<T>)
 	{
 		return 0;
 	}
 }
 
+/**
+ * Retrieves the coefficient at the given position of given polynomial.
+ *
+ * @tparam T Value type
+ *
+ * @param val Polynomial-like
+ * @param pos Coefficient position
+ *
+ * @return Coefficient of `val` at `pos`
+ *
+ * @throws `std::out_of_range` if `pos` is greater than the degree of `val`
+ */
 template <typename T>
-[[nodiscard]] constexpr decltype(auto) coefficient_at(T &val, std::size_t pos) noexcept
+[[nodiscard]] constexpr decltype(auto) coefficient_at(T &val, std::size_t pos)
 {
 	if constexpr (detail::member_at<T>)
 	{
@@ -65,6 +86,18 @@ template <typename T>
 	}
 }
 
+/**
+ * Retrieves the const-qualified coefficient at the given position of given polynomial.
+ *
+ * @tparam T Value type
+ *
+ * @param val Polynomial-like
+ * @param pos Coefficient position
+ *
+ * @return Coefficient of `val` at `pos`
+ *
+ * @throws `std::out_of_range` if `pos` is greater than the degree of `val`
+ */
 template <typename T>
 [[nodiscard]] constexpr decltype(auto) coefficient_at(const T &val, std::size_t pos) noexcept
 {
