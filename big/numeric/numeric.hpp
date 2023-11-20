@@ -1,7 +1,7 @@
 #pragma once
 
-#include <type_traits>
 #include "../traits/natural.hpp"
+#include <type_traits>
 
 
 namespace big::numeric
@@ -25,8 +25,23 @@ concept member_is_zero = requires (T t)
 {
 	{ t.is_zero() } -> std::same_as<bool>;
 };
+
+template <typename T>
+concept member_degree = requires (T t)
+{
+	{ t.degree() } -> std::unsigned_integral;
+};
 }
 
+/**
+ * Retrieves the sign bit of a number.
+ *
+ * @tparam T Value type
+ *
+ * @param val Number
+ *
+ * @return Sign bit of `val`, converted to `bool`
+ */
 template <typename T>
 [[nodiscard]] constexpr bool sign_bit(const T &val) noexcept
 {
@@ -46,12 +61,34 @@ template <typename T>
 	}
 }
 
+/**
+ * Retrieves the sign of a number.
+ *
+ * @tparam T Value type
+ *
+ * @param val Number
+ *
+ * @return `1` if `val` is nonnegative, `-1` otherwise
+ */
 template <typename T>
 [[nodiscard]] constexpr signed char sign(const T &val) noexcept
 {
 	return sign_bit(val) ? -1 : 1;
 }
 
+/**
+ * Retrieves the absolute value of a number.
+ *
+ * @tparam T Value type
+ *
+ * @param val Number
+ *
+ * @return Absolute value of `val`.
+ *
+ * @note The return type models `traits::natural_like`.
+ *
+ * @sa traits::natural_like
+ */
 template <typename T>
 [[nodiscard]] constexpr decltype(auto) abs(const T &val) noexcept
 {
@@ -71,6 +108,15 @@ template <typename T>
 	}
 }
 
+/**
+ * Checks the number for being zero.
+ *
+ * @tparam T Value type
+ *
+ * @param val Number
+ *
+ * @return `true` if `val` is zero, `false` otherwise
+ */
 template <typename T>
 [[nodiscard]] constexpr bool is_zero(const T &val) noexcept
 {
@@ -84,11 +130,17 @@ template <typename T>
 	}
 }
 
-// TODO: proper concepts
+/**
+ * Constructs a multiplicative identity for the given type.
+ *
+ * @tparam T Value type
+ *
+ * @return Multiplicative identity of type `T`
+ */
 template <typename T>
-[[nodiscard]] constexpr T multiplicative_identity() noexcept
+[[nodiscard]] constexpr std::remove_cvref_t<T> multiplicative_identity() noexcept
 {
-	if constexpr (requires (T t) { { t.major_coefficient() }; })
+	if constexpr (detail::member_degree<T>)
 	{
 		return T{{1}};
 	}
@@ -98,6 +150,16 @@ template <typename T>
 	}
 }
 
+/**
+ * Calculates the distance between two values.
+ *
+ * @tparam T Value type
+ *
+ * @param a First value
+ * @param b Second value
+ *
+ * @return `a - b` if `a > b`, `b - a` otherwise
+ */
 template <typename T>
 [[nodiscard]] constexpr auto distance(const T &a, const T &b) noexcept
 {

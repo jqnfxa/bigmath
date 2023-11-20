@@ -28,6 +28,7 @@ class rational : public conv::stringifiable<rational>
 		numerator_ /= coefficient;
 		denominator_ /= coefficient;
 	}
+
 public:
 	template <traits::integer_like T = std::intmax_t, traits::integer_like U = std::uintmax_t>
 	[[nodiscard]] constexpr rational(const T &numerator = 0, const U &denominator = 1)

@@ -12,13 +12,6 @@ namespace
 constexpr auto polynomial_parameter_token = 'x';
 constexpr auto add_token = '+';
 constexpr auto sub_token = '-';
-}
-
-struct polynomial_node
-{
-	std::size_t degree;
-	big::rational coefficient;
-};
 
 void throw_if_bad_polynomial_node(std::string_view str)
 {
@@ -63,6 +56,12 @@ void throw_if_bad_polynomial_node(std::string_view str)
 		throw std::invalid_argument("failed to parse node: bad sequence");
 	}
 }
+
+struct polynomial_node
+{
+	std::size_t degree;
+	big::rational coefficient;
+};
 
 [[nodiscard]] polynomial_node parse_polynomial_node(std::string_view str)
 {
@@ -116,6 +115,7 @@ void throw_if_bad_polynomial_node(std::string_view str)
         return node;
 }
 
+
 void add_node(std::map<std::size_t, big::rational> &coefficients, std::string_view node)
 {
 	if (node.empty())
@@ -157,7 +157,15 @@ void insert_plus_before_minus(std::string &s)
 		pos += 2;
 	}
 }
+}
 
+/**
+ * Parse polynomial expression string.
+ *
+ * @param expression Polynomial expression string.
+ *
+ * @return polynomial
+ */
 [[nodiscard]] big::polynomial parse_polynomial_without_brackets(std::string expression)
 {
 	insert_plus_before_minus(expression);

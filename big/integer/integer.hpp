@@ -5,11 +5,17 @@
 
 namespace big
 {
+/**
+ * Big integer number implementation.
+ */
 class integer : public conv::stringifiable<integer>
 {
 	bool sign_bit_;
 	natural abs_;
 
+	/**
+	 * If `abs_` is zero, sets `sign_bit_` to `false`.
+	 */
 	constexpr void normalize() & noexcept
 	{
 		if (is_zero())
@@ -18,6 +24,20 @@ class integer : public conv::stringifiable<integer>
 		}
 	}
 
+	/**
+	 * If given predicate is true for sign bits of two numbers,
+	 * adds the absolute value of the second one and preserves the sign bit.
+	 * Otherwise, sets the absolute value to be equal to distance
+	 * between the two absolute values and flips the sign bit.
+	 *
+	 * @tparam T          Value type
+	 * @tparam BinaryPred Binary predicate type
+	 *
+	 * @param other          Other value
+	 * @param sign_predicate Sign predicate
+	 *
+	 * @return Reference to instance
+	 */
 	template <traits::integer_like T, typename BinaryPred>
 	constexpr integer &add(const T &other, const BinaryPred &sign_predicate) & noexcept
 	{
@@ -74,19 +94,41 @@ public:
 		return *this <=> other == std::strong_ordering::equal;
 	}
 
+	/**
+	 * Gets the sign bit.
+	 *
+	 * @return Sign bit
+	 */
 	[[nodiscard]] constexpr bool sign_bit() const noexcept
 	{
 		return sign_bit_;
 	}
 
+	/**
+	 * Flips the sign bit.
+	 */
 	constexpr void flip_sign() & noexcept
 	{
 		sign_bit_ = !sign_bit_;
 	}
 
+	/**
+	 * Gets the absolute value.
+	 *
+	 * @return Absolute value
+	 */
 	[[nodiscard]] constexpr const natural &abs() const noexcept
 	{
 		return abs_;
+	}
+	/**
+	 * Checks the number for being zero.
+	 *
+	 * @return `true` if the number is a canonical zero, `false` otherwise.
+	 */
+	[[nodiscard]] constexpr bool is_zero() const noexcept
+	{
+		return abs_.is_zero();
 	}
 
 	[[nodiscard]] constexpr integer operator+() const noexcept
@@ -232,11 +274,6 @@ public:
 		integer tmp(*this);
 		tmp >>= shift;
 		return tmp;
-	}
-
-	[[nodiscard]] constexpr bool is_zero() const noexcept
-	{
-		return abs_.is_zero();
 	}
 
 	friend std::ostream &operator<<(std::ostream &out, const integer &num);

@@ -98,6 +98,13 @@ enum class operator_precedence : unsigned char
 	return is_binary_operator(id) && !is_additive_operator(id);
 }
 
+/**
+ * Returns the precedence of an operator token.
+ *
+ * @param id operator token ID
+ *
+ * @return Operator precedence
+ */
 [[nodiscard]] operator_precedence precedence(token_id id) noexcept
 {
 	switch (id)
@@ -123,6 +130,13 @@ enum class operator_precedence : unsigned char
 	}
 }
 
+/**
+ * Matches a token string with a token ID.
+ *
+ * @param str Token string
+ *
+ * @return token ID
+ */
 [[nodiscard]] token_id match_token(std::string_view str) noexcept
 {
 	if (std::all_of(str.begin(), str.end(), detail::is_digit))
@@ -142,11 +156,21 @@ enum class operator_precedence : unsigned char
 }
 }
 
+/**
+ * Expression parser and evaluator.
+ */
 class expression
 {
 	std::string_view expression_;
 
 protected:
+	/**
+	 * Parse one token and return it.
+	 *
+	 * @return Next token
+	 *
+	 * @note This advances `expression_` by the token size.
+	 */
 	token_info next()
 	{
 		if (expression_.empty())
@@ -185,6 +209,11 @@ public:
 		: expression_(expression)
 	{}
 
+	/**
+	 * Parses the expression string.
+	 *
+	 * @return Token queue
+	 */
 	[[nodiscard]] std::queue<token_info> parse()
 	{
 		std::queue<token_info> rpn;
@@ -243,6 +272,13 @@ public:
 		return rpn;
 	}
 
+	/**
+	 * Parses and evaluates the expression string.
+	 *
+	 * @tparam T Return type
+	 *
+	 * @return Expression evaluation result
+	 */
 	template <traits::rational_like T>
 	[[nodiscard]] T evaluate()
 	{

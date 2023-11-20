@@ -21,6 +21,15 @@ concept member_denominator = requires (T t)
 };
 }
 
+/**
+ * Retrieves the numerator of a number.
+ *
+ * @tparam T Value type
+ *
+ * @param val Rational-like
+ *
+ * @return Numerator of `val`
+ */
 template <typename T>
 [[nodiscard]] constexpr decltype(auto) numerator(const T &val) noexcept
 {
@@ -40,6 +49,15 @@ template <typename T>
 	}
 }
 
+/**
+ * Retrieves the denominator of a number.
+ *
+ * @tparam T Value type
+ *
+ * @param val Rational-like
+ *
+ * @return Denominator of `val`
+ */
 template <typename T>
 [[nodiscard]] constexpr decltype(auto) denominator(const T &val) noexcept
 {
@@ -54,10 +72,19 @@ template <typename T>
 	}
 }
 
+/**
+ * Checks given number for being an integer.
+ *
+ * @tparam T Value type
+ *
+ * @param val Rational-like
+ *
+ * @return `true` if denominator of `val` is
+ *         the multiplicative identity its type
+ */
 template <typename T>
 [[nodiscard]] constexpr bool is_integer(const T &val) noexcept
 {
-	const auto den = denominator(val);
-	return den == multiplicative_identity<decltype(den)>();
+	return denominator(val) == multiplicative_identity<decltype(denominator(val))>();
 }
 }

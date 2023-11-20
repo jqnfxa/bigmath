@@ -7,8 +7,17 @@
 
 namespace big::algorithm
 {
+/**
+ * Erases leading elements from back while given predicate is true.
+ *
+ * @tparam T         Vector value type
+ * @tparam UnaryPred Predicate type
+ *
+ * @param xs   Container
+ * @param pred Unary predicate
+ */
 template <typename T, typename UnaryPred>
-constexpr void erase_leading_up_to_last_if(std::vector<T>& xs, const UnaryPred &pred) noexcept
+constexpr void erase_from_back_while(std::vector<T>& xs, const UnaryPred &pred) noexcept
 {
 	namespace ranges = std::ranges;
 

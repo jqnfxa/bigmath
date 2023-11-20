@@ -14,7 +14,7 @@ class polynomial : public conv::stringifiable<polynomial>
 
 	constexpr void erase_leading_zeroes() &
 	{
-		return algorithm::erase_leading_up_to_last_if(coefficients_, numeric::is_zero<typename decltype(coefficients_)::value_type>);
+		return algorithm::erase_from_back_while(coefficients_, numeric::is_zero<typename decltype(coefficients_)::value_type>);
 	}
 
 	template <typename T>
