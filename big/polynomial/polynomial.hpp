@@ -6,8 +6,12 @@
 #include "../algorithm/container.hpp"
 #include <map>
 
+
 namespace big
 {
+/**
+ * Big polynomial implementation.
+ */
 class polynomial : public conv::stringifiable<polynomial>
 {
 	std::vector<rational> coefficients_;
@@ -41,24 +45,45 @@ public:
 
 	[[nodiscard]] explicit polynomial(const std::map<std::size_t, rational> &coefficients);
 
+	/**
+	 * Checks if the polynomial is zero
+	 *
+	 * @return `true` if the polynomial is zero, `false` otherwise
+	 */
 	[[nodiscard]] constexpr bool is_zero() const & noexcept
 	{
-                return degree() == 0 && numeric::is_zero(major_coefficient());
-        }
+	        return degree() == 0 && numeric::is_zero(major_coefficient());
+	}
 
+
+	/**
+	 * Function returns the major coefficients of the polynomial
+	 *
+	 * @return major coefficient of the polynomial as a constant reference
+	 */
 	[[nodiscard]] constexpr const rational &major_coefficient() const & noexcept
 	{
-                return coefficients_.back();
-        }
+	        return coefficients_.back();
+	}
 
+	/**
+	 * Get the coefficients of the polynomial
+	 *
+	 * @return A vector containing the coefficients of the polynomial
+	 */
 	[[nodiscard]] constexpr const std::vector<rational> &coefficients() const & noexcept
 	{
 		return coefficients_;
 	}
 
+	/**
+	 * Returns the degree of the polynomial
+	 *
+	 * @return polynomial's degree as size_type
+	 */
 	[[nodiscard]] constexpr size_type degree() const & noexcept
 	{
-		return std::ranges::size(coefficients_) - 1;
+	    return std::ranges::size(coefficients_) - 1;
 	}
 
 	[[nodiscard]] constexpr std::strong_ordering operator<=>(const polynomial &other) const & noexcept
@@ -71,6 +96,12 @@ public:
 		return *this <=> other == std::strong_ordering::equal;
 	}
 
+	/**
+	 * Retrieve rational object corresponding to the polynomial's degree
+	 *
+	 * @param degree The specific degree of the polynomial
+	 * @return rational object at the specific degree
+	 */
 	[[nodiscard]] constexpr rational &at(size_type degree) &
 	{
 		return const_cast<rational &>(const_cast<const polynomial *>(this)->at(degree));
@@ -96,6 +127,11 @@ public:
 		return at(degree);
 	}
 
+	/**
+	 * Compute the derivative of the polynomial
+	 *
+	 * @return derivative of the polynomial as a new polynomial object
+	 */
 	[[nodiscard]] constexpr polynomial derivative() const noexcept
 	{
 		polynomial der(*this);
@@ -114,6 +150,12 @@ public:
 		return der;
 	}
 
+	/**
+	 * Returns a normalized version of the polynomial
+	 * This function does not modify the original polynomial but returns a normalized copy.
+	 *
+	 * @return Normalized version of the given polynomial
+	 */
 	constexpr polynomial normalized() const
 	{
 		polynomial tmp(*this);
@@ -121,6 +163,11 @@ public:
 		return tmp;
 	}
 
+	/**
+	 * Normalizes a polynomial by dividing by a rational number
+	 * whose numerator is the NOD of all numerators of the coefficients of the polynomial,
+	 * and whose denominator is the NOC of all denominators of the coefficients of the polynomial
+	 */
 	constexpr void normalize() &
 	{
 		auto scalar = numeric::polynomial::coefficient_at(*this, 0);
@@ -135,6 +182,19 @@ public:
 		*this /= scalar;
 	}
 
+	/**
+	 * Convert polynomials with multiple roots to one with simple roots.
+	 *
+	 * This function performs the following operations sequentially:
+	 * 1. Creates a temporary copy of the given polynomial
+	 * 2. Divides the copied polynomial by the GCD of itself and its derivative
+	 * 3. Normalizes the copied polynomial i.e., divides the polynomial by
+	 *    a rational number whose numerator is the GCD of all numerators of
+	 *    the coefficients of the polynomial and whose denominator is the LCM
+	 *    of all denominators of the coefficients of the polynomial
+	 *
+	 * @return The resultant polynomial after performing the above operations
+	 */
 	constexpr polynomial multiple_roots_to_simple() const &
 	{
 		polynomial tmp(*this);
@@ -199,6 +259,14 @@ public:
 		return *this;
 	}
 
+	/**
+	 * Performs multiplication of a polynomial by x^k.
+	 * The method shifts a polynomial up by adding k zeros at the beginning of the polynomial,
+	 * which is equivalent to multiplying it by x^k.
+	 *
+	 * @param shift The number of positions 'k' by which the polynomial is to be shifted higher.
+	 * @return Reference to the polynomial after being shifted.
+	 */
 	constexpr polynomial &operator<<=(size_type shift) &
 	{
 		const auto &size = std::ranges::size(coefficients_);
@@ -263,6 +331,12 @@ public:
 		return tmp;
 	}
 
+	/**
+	 * Performs polynomial long division and returns the quotient and the remainder
+	 *
+	 * @param divisor The divisor polynomial for the division
+	 * @return A pair of polynomials where the first element is the quotient and the second element is the remainder
+	 */
 	[[nodiscard]] constexpr std::pair<polynomial, polynomial> long_div(const polynomial &divisor) const &
 	{
 		if (numeric::is_zero(numeric::polynomial::degree(divisor)) && numeric::is_zero(divisor.major_coefficient()))

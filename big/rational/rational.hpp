@@ -7,8 +7,12 @@
 #include "../integer/integer.hpp"
 #include "../algorithm/algorithm.hpp"
 
+
 namespace big
 {
+/**
+ * Big natural number implementation.
+ */
 class rational : public conv::stringifiable<rational>
 {
 	integer numerator_;
@@ -22,6 +26,9 @@ class rational : public conv::stringifiable<rational>
 		}
 	}
 
+	/**
+	 * Simplifies a fraction by reducing by the NOD of the numerator and denominator
+	 */
 	constexpr void simplify_fraction() & noexcept
 	{
 		const auto coefficient = gcd(numeric::abs(numerator_), numeric::abs(denominator_));
@@ -53,41 +60,79 @@ public:
 		return *this <=> other == std::strong_ordering::equal;
 	}
 
+	/**
+	 * Checks the number for being zero.
+	 *
+	 * @return `true` if the number is a canonical zero, `false` otherwise.
+	 */
 	[[nodiscard]] constexpr bool is_zero() const noexcept
 	{
 		return numeric::is_zero(numerator_);
 	}
 
+	/**
+	 * Flips the sign bit
+	 */
 	constexpr void flip_sign() & noexcept
 	{
 		return numerator_.flip_sign();
 	}
 
+	/**
+	 * Gets the sign bit.
+	 *
+	 * @return 'true' if the sign is set, 'false' otherwise
+	 */
 	[[nodiscard]] constexpr bool sign_bit() const noexcept
 	{
 		return numeric::sign_bit(numerator_);
 	}
 
+	/**
+	 * Gets the numerator of the rational number.
+	 *
+	 * @return numerator as a constant integer reference.
+	 */
 	[[nodiscard]] constexpr const integer &numerator() const noexcept
 	{
 		return numerator_;
 	}
 
+	/**
+	 * Gets the denominator of the rational number.
+	 *
+	 * @return denominator as a constant natural reference.
+	 */
 	[[nodiscard]] constexpr const natural &denominator() const noexcept
 	{
 		return denominator_;
 	}
 
+	/**
+	 * Gets the numerator of the rational number.
+	 *
+	 * @return numerator as an integer reference.
+	 */
 	[[nodiscard]] constexpr integer &numerator() noexcept
 	{
 		return const_cast<integer &>(const_cast<const rational *>(this)->numerator());
 	}
 
+	/**
+	 * Gets the denominator of the rational number.
+	 *
+	 * @return denominator as a natural reference.
+	 */
 	[[nodiscard]] constexpr natural &denominator() noexcept
 	{
 		return const_cast<natural &>(const_cast<const rational *>(this)->denominator());
 	}
 
+	/**
+	 * Returns the inverse of the current rational object.
+	 *
+	 * @return A rational number, which is the inverted version of the current object.
+	 */
 	[[nodiscard]] constexpr rational inverse() const
 	{
 		return rational(denominator_, numerator_);

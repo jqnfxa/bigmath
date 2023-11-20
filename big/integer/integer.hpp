@@ -121,6 +121,7 @@ public:
 	{
 		return abs_;
 	}
+
 	/**
 	 * Checks the number for being zero.
 	 *
