@@ -204,7 +204,7 @@ public:
 	 *
 	 * @note NMR_P_P
 	 */
-	constexpr polynomial multiple_roots_to_simple() const &
+	constexpr polynomial multiple_roots_to_simple() const
 	{
 		polynomial tmp(*this);
 		tmp /= algorithm::gcd(tmp, derivative());

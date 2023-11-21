@@ -22,7 +22,13 @@ template <typename Proj = std::identity>
 	return std::invoke(proj, str);
 }
 
-std::map<std::array<std::string_view, 2>, big::polynomial (big::polynomial::*)(const big::polynomial &) const> polynomial_operations{
+std::map<std::string_view, big::polynomial (big::polynomial::*)() const> polynomial_unary_operations{
+	{"der", &big::polynomial::derivative},
+	{"fac", &big::polynomial::normalized},
+	{"nmr", &big::polynomial::multiple_roots_to_simple},
+};
+
+std::map<std::array<std::string_view, 2>, big::polynomial (big::polynomial::*)(const big::polynomial &) const> polynomial_binary_operations{
 	{{"+", "add"}, &big::polynomial::operator+},
 	{{"-", "sub"}, &big::polynomial::operator-},
 	{{"*", "mul"}, &big::polynomial::operator*},
@@ -47,7 +53,7 @@ int main()
 		if (domain_type == domain::polynomial)
 		{
 			std::cout << "available operations over polynomials: \n"
-				"der, gcd, lcm, + (add), - (sub), * (mul), / (div), % (mod)\n";
+				"der, fac, nmr, pow, gcd, lcm, + (add), - (sub), * (mul), / (div), % (mod)\n";
 
 			std::cout << "p(x) = ";
 			const big::polynomial p = read_projected_string(std::cin, big::parse::parse_polynomial_without_brackets);
@@ -55,15 +61,22 @@ int main()
 			std::cout << "operation: ";
 			const auto operation_str = read_projected_string(std::cin);
 
-			if (operation_str == "der")
+			const auto unary_proj = &std::ranges::range_value_t<decltype(polynomial_unary_operations)>::first;
+			if (const auto fn = std::ranges::find(polynomial_unary_operations, operation_str, unary_proj); fn != std::ranges::end(polynomial_unary_operations))
 			{
-				std::cout << p.derivative() << '\n';
+				std::cout << (p.*fn->second)() << '\n';
+				return 0;
+			}
+
+			if (operation_str == "pow")
+			{
+				const big::natural power = read_projected_string(std::cin, [](std::string s) { return big::parse::expression(s).evaluate<big::natural>(); });
+				std::cout << big::algorithm::pow(p, power) << '\n';
 				return 0;
 			}
 
 			std::cout << "q(x) = ";
 			const big::polynomial q = read_projected_string(std::cin, big::parse::parse_polynomial_without_brackets);
-
 
 			const auto binary_algorithm_proj = &std::ranges::range_value_t<decltype(polynomial_binary_algorithms)>::first;
 			if (const auto b = std::ranges::find(polynomial_binary_algorithms, operation_str, binary_algorithm_proj); b != std::ranges::end(polynomial_binary_algorithms))
@@ -72,7 +85,7 @@ int main()
 			}
 			else
 			{
-				for (const auto &[keys, fn] : polynomial_operations)
+				for (const auto &[keys, fn] : polynomial_binary_operations)
 				{
 					if (std::ranges::find(keys, operation_str) != std::ranges::end(keys))
 					{
