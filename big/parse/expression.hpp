@@ -161,7 +161,8 @@ enum class operator_precedence : unsigned char
  */
 class expression
 {
-	std::string_view expression_;
+	std::string expr_;
+	std::string_view expr_view_;
 
 protected:
 	/**
@@ -169,19 +170,19 @@ protected:
 	 *
 	 * @return Next token
 	 *
-	 * @note This advances `expression_` by the token size.
+	 * @note This advances `expr_view_` by the token size.
 	 */
 	token_info next()
 	{
-		if (expression_.empty())
+		if (expr_view_.empty())
 		{
 			return {};
 		}
 
-		if (detail::is_blank(expression_.front()))
+		if (detail::is_blank(expr_view_.front()))
 		{
-			const auto first = expression_.begin();
-			const auto last = expression_.end();
+			const auto first = expr_view_.begin();
+			const auto last = expr_view_.end();
 
 			const auto next_token = std::find_if_not(first, last, detail::is_blank);
 			if (next_token == last)
@@ -189,10 +190,10 @@ protected:
 				return {};
 			}
 
-			expression_.remove_prefix(std::distance(first, next_token));
+			expr_view_.remove_prefix(std::distance(first, next_token));
 		}
 
-		std::string_view substr = expression_;
+		std::string_view substr = expr_view_;
 
 		token_id id{};
 		while (!substr.empty() && (id = detail::match_token(substr)) == token_id{})
@@ -200,13 +201,22 @@ protected:
 			substr.remove_suffix(1);
 		}
 
-		expression_.remove_prefix(substr.size());
+		expr_view_.remove_prefix(substr.size());
 		return {id, substr};
 	}
 
 public:
-	[[nodiscard]] explicit expression(std::string_view expression)
-		: expression_(expression)
+	[[nodiscard]] explicit expression(std::string expr)
+		: expr_(expr)
+		, expr_view_(expr_)
+	{}
+
+	[[nodiscard]] explicit expression(std::string_view expr)
+		: expr_view_(expr)
+	{}
+
+	[[nodiscard]] explicit expression(const char *expr)
+		: expression(std::string_view(expr))
 	{}
 
 	/**
