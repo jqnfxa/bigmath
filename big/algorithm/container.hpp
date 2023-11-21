@@ -73,6 +73,6 @@ constexpr void shift_coefficients(std::vector<T>& xs, std::size_t n)
 	xs.resize(size + n);
 
 	std::ranges::copy(xs | std::views::reverse | std::views::drop(n), std::ranges::rbegin(xs));
-	std::ranges::fill_n(std::ranges::begin(xs), shift, T{});
+	std::ranges::fill_n(std::ranges::begin(xs), n, T{});
 };
 }
